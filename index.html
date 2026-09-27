@@ -53,6 +53,36 @@
             color: #94a3b8;
         }
 
+        .language-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .lang-btn {
+            padding: 8px 12px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(148, 163, 184, 0.2);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            color: white;
+            border-color: #ec4899;
+        }
+
         .content {
             display: grid;
             grid-template-columns: 1fr;
@@ -278,15 +308,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>✨ Viral Text Video Generator</h1>
-            <p>Create stunning 9:16 vertical videos for YouTube Shorts & Instagram Reels</p>
+            <h1 id="title">✨ Viral Text Video Generator</h1>
+            <p id="subtitle">Create stunning 9:16 vertical videos for YouTube Shorts & Instagram Reels</p>
         </div>
+
+        <div class="language-selector" id="languageSelector"></div>
 
         <div class="content">
             <!-- Controls Section -->
             <div class="controls">
                 <div class="form-group">
-                    <label for="textInput">Your Text</label>
+                    <label for="textInput" id="textLabel">Your Text</label>
                     <input 
                         type="text" 
                         id="textInput" 
@@ -297,38 +329,27 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="effectSelect">Text Effect</label>
-                    <select id="effectSelect">
-                        <option value="neon">🌟 Neon Glow</option>
-                        <option value="typewriter">⌨️ Typewriter</option>
-                        <option value="bounce">🎈 Bounce/Pop-up</option>
-                        <option value="highlight">🎬 CapCut Highlight</option>
-                    </select>
+                    <label for="effectSelect" id="effectLabel">Text Effect</label>
+                    <select id="effectSelect"></select>
                 </div>
 
                 <div class="form-group">
-                    <label for="bgColorSelect">Background Style</label>
-                    <select id="bgColorSelect">
-                        <option value="gradient-dark">Dark Gradient</option>
-                        <option value="gradient-purple">Purple Vibes</option>
-                        <option value="gradient-sunset">Sunset</option>
-                        <option value="gradient-ocean">Ocean Blue</option>
-                        <option value="black">Solid Black</option>
-                    </select>
+                    <label for="bgColorSelect" id="bgLabel">Background Style</label>
+                    <select id="bgColorSelect"></select>
                 </div>
 
                 <div class="button-group">
-                    <button class="btn btn-primary" id="generateBtn">🎬 Generate Video</button>
-                    <button class="btn btn-secondary" id="previewBtn">👁️ Preview</button>
+                    <button class="btn btn-primary" id="generateBtn">Generate Video</button>
+                    <button class="btn btn-secondary" id="previewBtn">Preview</button>
                 </div>
 
                 <div class="status" id="status"></div>
-                <p class="info-text">4-second looping video • .webm format • Mobile optimized</p>
+                <p class="info-text" id="infoText">15-second looping video • .webm format • Mobile optimized</p>
             </div>
 
             <!-- Preview Section -->
             <div class="preview-section">
-                <span class="preview-label">Live Preview</span>
+                <span class="preview-label" id="previewLabel">Live Preview</span>
                 <div class="preview-container">
                     <canvas id="canvas"></canvas>
                 </div>
@@ -337,6 +358,352 @@
     </div>
 
     <script>
+        // Language translations
+        const translations = {
+            en: {
+                title: '✨ Viral Text Video Generator',
+                subtitle: 'Create stunning 9:16 vertical videos for YouTube Shorts & Instagram Reels',
+                textLabel: 'Your Text',
+                textPlaceholder: 'Enter your viral text here...',
+                effectLabel: 'Text Effect',
+                bgLabel: 'Background Style',
+                previewLabel: 'Live Preview',
+                generateBtn: '🎬 Generate Video',
+                previewBtn: '👁️ Preview',
+                infoText: '15-second looping video • .webm format • Mobile optimized',
+                previewPlaying: 'Preview playing...',
+                enterText: 'Please enter some text!',
+                rendering: 'Rendering video...',
+                success: '✅ Video generated and downloaded!',
+                error: 'Error generating video. Check console.',
+                recordingError: 'Recording error. Try again.',
+                effects: {
+                    neon: '🌟 Neon Glow',
+                    typewriter: '⌨️ Typewriter',
+                    bounce: '🎈 Bounce/Pop-up',
+                    highlight: '🎬 CapCut Highlight'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Dark Gradient',
+                    'gradient-purple': 'Purple Vibes',
+                    'gradient-sunset': 'Sunset',
+                    'gradient-ocean': 'Ocean Blue',
+                    'black': 'Solid Black'
+                }
+            },
+            es: {
+                title: '✨ Generador de Videos de Texto Viral',
+                subtitle: 'Crea impresionantes videos verticales 9:16 para YouTube Shorts e Instagram Reels',
+                textLabel: 'Tu Texto',
+                textPlaceholder: 'Ingresa tu texto viral aquí...',
+                effectLabel: 'Efecto de Texto',
+                bgLabel: 'Estilo de Fondo',
+                previewLabel: 'Vista Previa en Directo',
+                generateBtn: '🎬 Generar Video',
+                previewBtn: '👁️ Vista Previa',
+                infoText: 'Video en bucle de 15 segundos • Formato .webm • Optimizado para móvil',
+                previewPlaying: 'Reproduciéndose vista previa...',
+                enterText: '¡Por favor ingresa algún texto!',
+                rendering: 'Renderizando video...',
+                success: '✅ ¡Video generado y descargado!',
+                error: 'Error generando video. Revisa la consola.',
+                recordingError: 'Error de grabación. Intenta de nuevo.',
+                effects: {
+                    neon: '🌟 Brillo Neón',
+                    typewriter: '⌨️ Máquina de Escribir',
+                    bounce: '🎈 Rebote/Emergente',
+                    highlight: '🎬 Estilo CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Degradado Oscuro',
+                    'gradient-purple': 'Vibraciones Púrpura',
+                    'gradient-sunset': 'Atardecer',
+                    'gradient-ocean': 'Azul Océano',
+                    'black': 'Negro Sólido'
+                }
+            },
+            fr: {
+                title: '✨ Générateur de Vidéos Texte Viral',
+                subtitle: 'Créez de superbes vidéos verticales 9:16 pour YouTube Shorts et Instagram Reels',
+                textLabel: 'Votre Texte',
+                textPlaceholder: 'Entrez votre texte viral ici...',
+                effectLabel: 'Effet de Texte',
+                bgLabel: 'Style de Fond',
+                previewLabel: 'Aperçu en Direct',
+                generateBtn: '🎬 Générer Vidéo',
+                previewBtn: '👁️ Aperçu',
+                infoText: 'Vidéo en boucle de 15 secondes • Format .webm • Optimisé pour mobile',
+                previewPlaying: 'Aperçu en cours de lecture...',
+                enterText: 'Veuillez entrer du texte!',
+                rendering: 'Rendu de la vidéo...',
+                success: '✅ Vidéo générée et téléchargée!',
+                error: 'Erreur lors de la génération. Vérifiez la console.',
+                recordingError: 'Erreur d\'enregistrement. Réessayez.',
+                effects: {
+                    neon: '🌟 Lueur Néon',
+                    typewriter: '⌨️ Machine à Écrire',
+                    bounce: '🎈 Rebond/Pop-up',
+                    highlight: '🎬 Style CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Dégradé Sombre',
+                    'gradient-purple': 'Vibes Violettes',
+                    'gradient-sunset': 'Coucher de Soleil',
+                    'gradient-ocean': 'Bleu Océan',
+                    'black': 'Noir Solide'
+                }
+            },
+            de: {
+                title: '✨ Viral Text Video Generator',
+                subtitle: 'Erstellen Sie beeindruckende 9:16-Vertikalvideos für YouTube Shorts und Instagram Reels',
+                textLabel: 'Ihr Text',
+                textPlaceholder: 'Geben Sie Ihren viralen Text hier ein...',
+                effectLabel: 'Texteffekt',
+                bgLabel: 'Hintergrundstil',
+                previewLabel: 'Live-Vorschau',
+                generateBtn: '🎬 Video Generieren',
+                previewBtn: '👁️ Vorschau',
+                infoText: '15-Sekunden-Schleifenvideo • .webm-Format • Mobiloptimiert',
+                previewPlaying: 'Vorschau wird abgespielt...',
+                enterText: 'Bitte geben Sie einen Text ein!',
+                rendering: 'Video wird gerendert...',
+                success: '✅ Video erstellt und heruntergeladen!',
+                error: 'Fehler beim Generieren des Videos. Konsole überprüfen.',
+                recordingError: 'Aufnahmefehler. Bitte versuchen Sie es erneut.',
+                effects: {
+                    neon: '🌟 Neon-Glühen',
+                    typewriter: '⌨️ Schreibmaschine',
+                    bounce: '🎈 Sprung/Pop-Up',
+                    highlight: '🎬 CapCut-Stil'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Dunkler Farbverlauf',
+                    'gradient-purple': 'Violette Vibes',
+                    'gradient-sunset': 'Sonnenuntergang',
+                    'gradient-ocean': 'Ozeanblau',
+                    'black': 'Reines Schwarz'
+                }
+            },
+            it: {
+                title: '✨ Generatore di Video Testo Virale',
+                subtitle: 'Crea straordinari video verticali 9:16 per YouTube Shorts e Instagram Reels',
+                textLabel: 'Il Vostro Testo',
+                textPlaceholder: 'Inserite il vostro testo virale qui...',
+                effectLabel: 'Effetto Testo',
+                bgLabel: 'Stile Sfondo',
+                previewLabel: 'Anteprima in Diretta',
+                generateBtn: '🎬 Genera Video',
+                previewBtn: '👁️ Anteprima',
+                infoText: 'Video a ciclo di 15 secondi • Formato .webm • Ottimizzato per mobile',
+                previewPlaying: 'Anteprima in riproduzione...',
+                enterText: 'Per favore inserisci del testo!',
+                rendering: 'Rendering del video...',
+                success: '✅ Video generato e scaricato!',
+                error: 'Errore nella generazione del video. Controlla la console.',
+                recordingError: 'Errore di registrazione. Riprova.',
+                effects: {
+                    neon: '🌟 Bagliore al Neon',
+                    typewriter: '⌨️ Macchina da Scrivere',
+                    bounce: '🎈 Rimbalzo/Pop-up',
+                    highlight: '🎬 Stile CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Sfumatura Scura',
+                    'gradient-purple': 'Vibrazioni Viola',
+                    'gradient-sunset': 'Tramonto',
+                    'gradient-ocean': 'Blu Oceano',
+                    'black': 'Nero Solido'
+                }
+            },
+            pt: {
+                title: '✨ Gerador de Vídeos de Texto Viral',
+                subtitle: 'Crie vídeos verticais impressionantes 9:16 para YouTube Shorts e Instagram Reels',
+                textLabel: 'Seu Texto',
+                textPlaceholder: 'Digite seu texto viral aqui...',
+                effectLabel: 'Efeito de Texto',
+                bgLabel: 'Estilo de Fundo',
+                previewLabel: 'Visualização Ao Vivo',
+                generateBtn: '🎬 Gerar Vídeo',
+                previewBtn: '👁️ Visualizar',
+                infoText: 'Vídeo em loop de 15 segundos • Formato .webm • Otimizado para móvel',
+                previewPlaying: 'Visualização em reprodução...',
+                enterText: 'Por favor, digite algum texto!',
+                rendering: 'Renderizando vídeo...',
+                success: '✅ Vídeo gerado e baixado!',
+                error: 'Erro ao gerar vídeo. Verifique o console.',
+                recordingError: 'Erro de gravação. Tente novamente.',
+                effects: {
+                    neon: '🌟 Brilho Neon',
+                    typewriter: '⌨️ Máquina de Escrever',
+                    bounce: '🎈 Salto/Pop-up',
+                    highlight: '🎬 Estilo CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Gradiente Escuro',
+                    'gradient-purple': 'Vibras Roxas',
+                    'gradient-sunset': 'Pôr do Sol',
+                    'gradient-ocean': 'Azul Oceano',
+                    'black': 'Preto Sólido'
+                }
+            },
+            ja: {
+                title: '✨ ウイルステキストビデオジェネレーター',
+                subtitle: 'YouTube ShortとInstagram Reels向けの素晴らしい9:16縦型ビデオを作成します',
+                textLabel: 'あなたのテキスト',
+                textPlaceholder: 'ここにウイルステキストを入力してください...',
+                effectLabel: 'テキストエフェクト',
+                bgLabel: '背景スタイル',
+                previewLabel: 'ライブプレビュー',
+                generateBtn: '🎬 ビデオ生成',
+                previewBtn: '👁️ プレビュー',
+                infoText: '15秒ループビデオ・.webm形式・モバイル最適化',
+                previewPlaying: 'プレビュー再生中...',
+                enterText: 'テキストを入力してください！',
+                rendering: 'ビデオをレンダリング中...',
+                success: '✅ビデオが生成されダウンロードされました！',
+                error: 'ビデオ生成エラー。コンソールを確認してください。',
+                recordingError: '録画エラー。もう一度試してください。',
+                effects: {
+                    neon: '🌟 ネオン光',
+                    typewriter: '⌨️ タイプライター',
+                    bounce: '🎈 バウンス/ポップアップ',
+                    highlight: '🎬 CapCutスタイル'
+                },
+                backgrounds: {
+                    'gradient-dark': 'ダークグラデーション',
+                    'gradient-purple': 'パープルバイブ',
+                    'gradient-sunset': 'サンセット',
+                    'gradient-ocean': 'オーシャンブルー',
+                    'black': 'ソリッドブラック'
+                }
+            },
+            zh: {
+                title: '✨ 病毒文字视频生成器',
+                subtitle: '为YouTube Shorts和Instagram Reels创建令人惊艳的9:16竖屏视频',
+                textLabel: '您的文本',
+                textPlaceholder: '在此输入您的病毒文本...',
+                effectLabel: '文字效果',
+                bgLabel: '背景风格',
+                previewLabel: '实时预览',
+                generateBtn: '🎬 生成视频',
+                previewBtn: '👁️ 预览',
+                infoText: '15秒循环视频 • .webm格式 • 移动优化',
+                previewPlaying: '预览播放中...',
+                enterText: '请输入一些文本！',
+                rendering: '正在渲染视频...',
+                success: '✅视频已生成并下载！',
+                error: '视频生成出错。请检查控制台。',
+                recordingError: '录制错误。请重试。',
+                effects: {
+                    neon: '🌟 霓虹辉光',
+                    typewriter: '⌨️ 打字机',
+                    bounce: '🎈 弹跳/弹出',
+                    highlight: '🎬 CapCut风格'
+                },
+                backgrounds: {
+                    'gradient-dark': '深色渐变',
+                    'gradient-purple': '紫色氛围',
+                    'gradient-sunset': '日落',
+                    'gradient-ocean': '海洋蓝',
+                    'black': '纯黑'
+                }
+            },
+            ar: {
+                title: '✨ مولد فيديو النص الفيروسي',
+                subtitle: 'قم بإنشاء مقاطع فيديو رأسية مذهلة بنسبة 9:16 لـ YouTube Shorts و Instagram Reels',
+                textLabel: 'نصك',
+                textPlaceholder: 'أدخل نصك الفيروسي هنا...',
+                effectLabel: 'تأثير النص',
+                bgLabel: 'نمط الخلفية',
+                previewLabel: 'معاينة مباشرة',
+                generateBtn: '🎬 إنشاء الفيديو',
+                previewBtn: '👁️ معاينة',
+                infoText: 'فيديو حلقة 15 ثانية • تنسيق .webm • محسّن للجوال',
+                previewPlaying: 'المعاينة تعمل...',
+                enterText: 'يرجى إدخال بعض النص!',
+                rendering: 'جاري عرض الفيديو...',
+                success: '✅ تم إنشاء الفيديو وتنزيله!',
+                error: 'خطأ في إنشاء الفيديو. تحقق من وحدة التحكم.',
+                recordingError: 'خطأ في التسجيل. حاول مجددا.',
+                effects: {
+                    neon: '🌟 توهج النيون',
+                    typewriter: '⌨️ آلة كاتبة',
+                    bounce: '🎈 ارتداد/منبثق',
+                    highlight: '🎬 نمط CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'تدرج مظلم',
+                    'gradient-purple': 'أرجواني النشاط',
+                    'gradient-sunset': 'غروب الشمس',
+                    'gradient-ocean': 'أزرق المحيط',
+                    'black': 'أسود صلب'
+                }
+            },
+            ko: {
+                title: '✨ 바이럴 텍스트 비디오 생성기',
+                subtitle: 'YouTube Shorts 및 Instagram Reels용 놀라운 9:16 세로 비디오 생성',
+                textLabel: '텍스트',
+                textPlaceholder: '바이럴 텍스트를 여기에 입력하세요...',
+                effectLabel: '텍스트 효과',
+                bgLabel: '배경 스타일',
+                previewLabel: '라이브 미리보기',
+                generateBtn: '🎬 비디오 생성',
+                previewBtn: '👁️ 미리보기',
+                infoText: '15초 루프 비디오 • .webm 형식 • 모바일 최적화',
+                previewPlaying: '미리보기 재생 중...',
+                enterText: '텍스트를 입력하세요!',
+                rendering: '비디오 렌더링 중...',
+                success: '✅ 비디오가 생성되어 다운로드되었습니다!',
+                error: '비디오 생성 오류. 콘솔을 확인하세요.',
+                recordingError: '녹화 오류입니다. 다시 시도하세요.',
+                effects: {
+                    neon: '🌟 네온 글로우',
+                    typewriter: '⌨️ 타이핑라이터',
+                    bounce: '🎈 바운스/팝업',
+                    highlight: '🎬 CapCut 스타일'
+                },
+                backgrounds: {
+                    'gradient-dark': '다크 그래디언트',
+                    'gradient-purple': '퍼플 바이브',
+                    'gradient-sunset': '일몰',
+                    'gradient-ocean': '오션 블루',
+                    'black': '솔리드 블랙'
+                }
+            },
+            ru: {
+                title: '✨ Генератор вирусных видео с текстом',
+                subtitle: 'Создавайте потрясающие вертикальные видео 9:16 для YouTube Shorts и Instagram Reels',
+                textLabel: 'Ваш текст',
+                textPlaceholder: 'Введите свой вирусный текст здесь...',
+                effectLabel: 'Текстовый эффект',
+                bgLabel: 'Стиль фона',
+                previewLabel: 'Живой просмотр',
+                generateBtn: '🎬 Создать видео',
+                previewBtn: '👁️ Просмотр',
+                infoText: 'Видео в цикле 15 секунд • Формат .webm • Оптимизировано для мобилы',
+                previewPlaying: 'Просмотр воспроизводится...',
+                enterText: 'Пожалуйста, введите текст!',
+                rendering: 'Рендеринг видео...',
+                success: '✅ Видео создано и загружено!',
+                error: 'Ошибка при создании видео. Проверьте консоль.',
+                recordingError: 'Ошибка записи. Попробуйте еще раз.',
+                effects: {
+                    neon: '🌟 Неоновое свечение',
+                    typewriter: '⌨️ Печатная машинка',
+                    bounce: '🎈 Прыжок/Всплывающее',
+                    highlight: '🎬 Стиль CapCut'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Темный градиент',
+                    'gradient-purple': 'Фиолетовые вибрации',
+                    'gradient-sunset': 'Закат',
+                    'gradient-ocean': 'Синий океан',
+                    'black': 'Твердо черный'
+                }
+            }
+        };
+
+        // Get all DOM elements
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const textInput = document.getElementById('textInput');
@@ -345,16 +712,20 @@
         const generateBtn = document.getElementById('generateBtn');
         const previewBtn = document.getElementById('previewBtn');
         const statusEl = document.getElementById('status');
+        const languageSelector = document.getElementById('languageSelector');
 
         // Canvas dimensions (9:16 aspect ratio)
         const CANVAS_WIDTH = 720;
         const CANVAS_HEIGHT = 1280;
         const FPS = 30;
-        const DURATION = 4; // seconds
+        const DURATION = 15; // 15 seconds
         const TOTAL_FRAMES = FPS * DURATION;
 
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
+
+        // Current language
+        let currentLanguage = 'en';
 
         // Background gradients configuration
         const bgGradients = {
@@ -380,6 +751,69 @@
             }
         };
 
+        // Initialize language selector and UI
+        function initializeLanguage() {
+            const languages = Object.keys(translations);
+            languageSelector.innerHTML = '';
+            
+            languages.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.className = `lang-btn ${lang === currentLanguage ? 'active' : ''}`;
+                btn.textContent = lang.toUpperCase();
+                btn.addEventListener('click', () => setLanguage(lang));
+                languageSelector.appendChild(btn);
+            });
+
+            setLanguage('en');
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+
+            // Update text content
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('textLabel').textContent = t.textLabel;
+            document.getElementById('textInput').placeholder = t.textPlaceholder;
+            document.getElementById('effectLabel').textContent = t.effectLabel;
+            document.getElementById('bgLabel').textContent = t.bgLabel;
+            document.getElementById('previewLabel').textContent = t.previewLabel;
+            document.getElementById('generateBtn').innerHTML = t.generateBtn;
+            document.getElementById('previewBtn').innerHTML = t.previewBtn;
+            document.getElementById('infoText').textContent = t.infoText;
+
+            // Update effect select options
+            effectSelect.innerHTML = '';
+            Object.entries(t.effects).forEach(([key, label]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = label;
+                effectSelect.appendChild(option);
+            });
+
+            // Update background select options
+            bgColorSelect.innerHTML = '';
+            Object.entries(t.backgrounds).forEach(([key, label]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = label;
+                bgColorSelect.appendChild(option);
+            });
+
+            // Update active language button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.lang-btn:nth-child(${Object.keys(translations).indexOf(lang) + 1})`).classList.add('active');
+
+            // Restart preview
+            if (currentPreviewLoop) {
+                clearInterval(currentPreviewLoop);
+            }
+            currentPreviewLoop = animatePreview();
+        }
+
         function createGradient(ctxRef, bgStyle) {
             const config = bgGradients[bgStyle];
             const angle = (config.angle * Math.PI) / 180;
@@ -399,7 +833,6 @@
             ctxRef.fillStyle = gradient;
             ctxRef.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Add animated particles
             ctxRef.fillStyle = 'rgba(236, 72, 153, 0.1)';
             for (let i = 0; i < 5; i++) {
                 const x = Math.random() * CANVAS_WIDTH;
@@ -416,20 +849,16 @@
 
             const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
             const centerY = CANVAS_HEIGHT / 2;
-
-            // Scale animation
             const scale = 0.8 + Math.sin(progress * Math.PI * 2) * 0.2;
 
             ctxRef.save();
             ctxRef.translate(CANVAS_WIDTH / 2, centerY);
             ctxRef.scale(scale, scale);
 
-            // Neon glow effect
             ctxRef.font = 'bold 80px Arial, sans-serif';
             ctxRef.textAlign = 'center';
             ctxRef.textBaseline = 'middle';
 
-            // Multiple layers for glow
             for (let i = 3; i > 0; i--) {
                 ctxRef.fillStyle = `rgba(236, 72, 153, ${0.3 / i})`;
                 ctxRef.shadowColor = 'rgba(236, 72, 153, 0.8)';
@@ -461,7 +890,6 @@
 
             ctxRef.fillText(displayText, CANVAS_WIDTH / 2, centerY);
 
-            // Cursor
             if (charCount < text.length) {
                 ctxRef.fillStyle = '#ec4899';
                 const cursorX = ctxRef.measureText(displayText).width / 2 + 10;
@@ -479,7 +907,6 @@
             ctxRef.textAlign = 'center';
             ctxRef.textBaseline = 'middle';
 
-            // Bounce with scale
             const scale = 0.7 + bounceProgress * 0.3;
             const offsetY = bounceProgress * 60;
 
@@ -487,7 +914,6 @@
             ctxRef.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
             ctxRef.scale(scale, scale);
 
-            // Text with gradient
             const gradient = ctxRef.createLinearGradient(-200, -50, 200, 50);
             gradient.addColorStop(0, '#ec4899');
             gradient.addColorStop(0.5, '#f97316');
@@ -498,7 +924,6 @@
 
             ctxRef.restore();
 
-            // Add sparkles
             ctxRef.fillStyle = 'rgba(255, 255, 255, 0.8)';
             for (let i = 0; i < 3; i++) {
                 const angle = (progress * Math.PI * 2) + (i * Math.PI * 2 / 3);
@@ -523,7 +948,6 @@
             const centerY = CANVAS_HEIGHT / 2;
             const textWidth = ctxRef.measureText(text).width;
 
-            // Background highlight box
             ctxRef.fillStyle = `rgba(236, 72, 153, ${0.2 + highlightProgress * 0.3})`;
             ctxRef.shadowColor = 'rgba(236, 72, 153, 0.5)';
             ctxRef.shadowBlur = 20;
@@ -534,7 +958,6 @@
                 100
             );
 
-            // Text
             ctxRef.fillStyle = '#fbbf24';
             ctxRef.shadowColor = '#fbbf24';
             ctxRef.shadowBlur = 10;
@@ -542,7 +965,7 @@
         }
 
         function drawFrame(ctxRef, frameIndex) {
-            const text = textInput.value || 'Make something awesome!';
+            const text = textInput.value || translations[currentLanguage].textPlaceholder;
             const effect = effectSelect.value;
 
             switch (effect) {
@@ -563,7 +986,9 @@
             }
         }
 
-        function showStatus(message, type) {
+        function showStatus(messageKey, type) {
+            const t = translations[currentLanguage];
+            const message = t[messageKey] || messageKey;
             statusEl.textContent = message;
             statusEl.className = `status active ${type}`;
             setTimeout(() => {
@@ -588,18 +1013,19 @@
                 clearInterval(currentPreviewLoop);
             }
             currentPreviewLoop = animatePreview();
-            showStatus('Preview playing...', 'info');
+            showStatus('previewPlaying', 'info');
         });
 
         generateBtn.addEventListener('click', async () => {
             if (!textInput.value.trim()) {
-                showStatus('Please enter some text!', 'error');
+                showStatus('enterText', 'error');
                 return;
             }
 
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading-spinner"></span>Generating...';
-            showStatus('Rendering video...', 'info');
+            const t = translations[currentLanguage];
+            generateBtn.innerHTML = '<span class="loading-spinner"></span>' + t.generateBtn.split('Generate')[1];
+            showStatus('rendering', 'info');
 
             try {
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -633,9 +1059,9 @@
 
                 mediaRecorder.onerror = (e) => {
                     console.error('MediaRecorder error:', e);
-                    showStatus('Recording error. Try again.', 'error');
+                    showStatus('recordingError', 'error');
                     generateBtn.disabled = false;
-                    generateBtn.innerHTML = '🎬 Generate Video';
+                    generateBtn.innerHTML = t.generateBtn;
                 };
 
                 mediaRecorder.onstop = () => {
@@ -649,14 +1075,13 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
-                    showStatus('✅ Video generated and downloaded!', 'success');
+                    showStatus('success', 'success');
                     generateBtn.disabled = false;
-                    generateBtn.innerHTML = '🎬 Generate Video';
+                    generateBtn.innerHTML = t.generateBtn;
                 };
 
                 mediaRecorder.start();
 
-                // Draw frames to offscreen canvas
                 const frameInterval = 1000 / FPS;
                 let lastTime = Date.now();
                 let frameCount = 0;
@@ -682,13 +1107,13 @@
                 renderFrame();
             } catch (error) {
                 console.error('Error generating video:', error);
-                showStatus('Error generating video. Check console.', 'error');
+                showStatus('error', 'error');
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '🎬 Generate Video';
+                const t = translations[currentLanguage];
+                generateBtn.innerHTML = t.generateBtn;
             }
         });
 
-        // Auto-start preview
         textInput.addEventListener('input', () => {
             if (currentPreviewLoop) {
                 clearInterval(currentPreviewLoop);
@@ -696,7 +1121,8 @@
             currentPreviewLoop = animatePreview();
         });
 
-        // Initial preview
+        // Initialize
+        initializeLanguage();
         currentPreviewLoop = animatePreview();
     </script>
 </body>
