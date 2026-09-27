@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral Text Video Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #e2e8f0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ec4899;
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #64748b;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            color: white;
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.1);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(148, 163, 184, 0.2);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .preview-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            align-self: flex-start;
+        }
+
+        .preview-container {
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 16px;
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .status {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status.active {
+            opacity: 1;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .btn {
+                min-width: 100%;
+            }
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Viral Text Video Generator</h1>
+            <p>Create stunning 9:16 vertical videos for YouTube Shorts & Instagram Reels</p>
+        </div>
+
+        <div class="content">
+            <!-- Controls Section -->
+            <div class="controls">
+                <div class="form-group">
+                    <label for="textInput">Your Text</label>
+                    <input 
+                        type="text" 
+                        id="textInput" 
+                        placeholder="Enter your viral text here..."
+                        maxlength="100"
+                        value="Make something awesome!"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="effectSelect">Text Effect</label>
+                    <select id="effectSelect">
+                        <option value="neon">🌟 Neon Glow</option>
+                        <option value="typewriter">⌨️ Typewriter</option>
+                        <option value="bounce">🎈 Bounce/Pop-up</option>
+                        <option value="highlight">🎬 CapCut Highlight</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bgColorSelect">Background Style</label>
+                    <select id="bgColorSelect">
+                        <option value="gradient-dark">Dark Gradient</option>
+                        <option value="gradient-purple">Purple Vibes</option>
+                        <option value="gradient-sunset">Sunset</option>
+                        <option value="gradient-ocean">Ocean Blue</option>
+                        <option value="black">Solid Black</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" id="generateBtn">🎬 Generate Video</button>
+                    <button class="btn btn-secondary" id="previewBtn">👁️ Preview</button>
+                </div>
+
+                <div class="status" id="status"></div>
+                <p class="info-text">4-second looping video • .webm format • Mobile optimized</p>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <span class="preview-label">Live Preview</span>
+                <div class="preview-container">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('textInput');
+        const effectSelect = document.getElementById('effectSelect');
+        const bgColorSelect = document.getElementById('bgColorSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const statusEl = document.getElementById('status');
+
+        // Canvas dimensions (9:16 aspect ratio)
+        const CANVAS_WIDTH = 720;
+        const CANVAS_HEIGHT = 1280;
+        const FPS = 30;
+        const DURATION = 4; // seconds
+        const TOTAL_FRAMES = FPS * DURATION;
+
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        // Background gradients configuration
+        const bgGradients = {
+            'gradient-dark': {
+                colors: ['#0f172a', '#1e293b'],
+                angle: 135
+            },
+            'gradient-purple': {
+                colors: ['#2d1b69', '#6d28d9'],
+                angle: 135
+            },
+            'gradient-sunset': {
+                colors: ['#7c2d12', '#ea580c'],
+                angle: 135
+            },
+            'gradient-ocean': {
+                colors: ['#0c4a6e', '#0369a1'],
+                angle: 135
+            },
+            'black': {
+                colors: ['#000000', '#000000'],
+                angle: 0
+            }
+        };
+
+        function createGradient(ctxRef, bgStyle) {
+            const config = bgGradients[bgStyle];
+            const angle = (config.angle * Math.PI) / 180;
+            const x1 = CANVAS_WIDTH / 2 - Math.cos(angle) * CANVAS_WIDTH;
+            const y1 = CANVAS_HEIGHT / 2 - Math.sin(angle) * CANVAS_HEIGHT;
+            const x2 = CANVAS_WIDTH / 2 + Math.cos(angle) * CANVAS_WIDTH;
+            const y2 = CANVAS_HEIGHT / 2 + Math.sin(angle) * CANVAS_HEIGHT;
+
+            const gradient = ctxRef.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, config.colors[0]);
+            gradient.addColorStop(1, config.colors[1]);
+            return gradient;
+        }
+
+        function drawBackground(ctxRef, bgStyle) {
+            const gradient = createGradient(ctxRef, bgStyle);
+            ctxRef.fillStyle = gradient;
+            ctxRef.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            // Add animated particles
+            ctxRef.fillStyle = 'rgba(236, 72, 153, 0.1)';
+            for (let i = 0; i < 5; i++) {
+                const x = Math.random() * CANVAS_WIDTH;
+                const y = Math.random() * CANVAS_HEIGHT;
+                const size = Math.random() * 60 + 20;
+                ctxRef.beginPath();
+                ctxRef.arc(x, y, size, 0, Math.PI * 2);
+                ctxRef.fill();
+            }
+        }
+
+        function drawNeonGlow(ctxRef, text, frameIndex) {
+            drawBackground(ctxRef, bgColorSelect.value);
+
+            const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+            const centerY = CANVAS_HEIGHT / 2;
+
+            // Scale animation
+            const scale = 0.8 + Math.sin(progress * Math.PI * 2) * 0.2;
+
+            ctxRef.save();
+            ctxRef.translate(CANVAS_WIDTH / 2, centerY);
+            ctxRef.scale(scale, scale);
+
+            // Neon glow effect
+            ctxRef.font = 'bold 80px Arial, sans-serif';
+            ctxRef.textAlign = 'center';
+            ctxRef.textBaseline = 'middle';
+
+            // Multiple layers for glow
+            for (let i = 3; i > 0; i--) {
+                ctxRef.fillStyle = `rgba(236, 72, 153, ${0.3 / i})`;
+                ctxRef.shadowColor = 'rgba(236, 72, 153, 0.8)';
+                ctxRef.shadowBlur = i * 15;
+                ctxRef.fillText(text, 0, 0);
+            }
+
+            ctxRef.fillStyle = '#ec4899';
+            ctxRef.shadowColor = '#ec4899';
+            ctxRef.shadowBlur = 20;
+            ctxRef.fillText(text, 0, 0);
+
+            ctxRef.restore();
+        }
+
+        function drawTypewriter(ctxRef, text, frameIndex) {
+            drawBackground(ctxRef, bgColorSelect.value);
+
+            const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+            const charCount = Math.floor(progress * text.length * 2) % (text.length + 1);
+
+            ctxRef.font = 'bold 70px Arial, sans-serif';
+            ctxRef.textAlign = 'center';
+            ctxRef.textBaseline = 'middle';
+            ctxRef.fillStyle = '#e2e8f0';
+
+            const centerY = CANVAS_HEIGHT / 2;
+            const displayText = text.substring(0, charCount);
+
+            ctxRef.fillText(displayText, CANVAS_WIDTH / 2, centerY);
+
+            // Cursor
+            if (charCount < text.length) {
+                ctxRef.fillStyle = '#ec4899';
+                const cursorX = ctxRef.measureText(displayText).width / 2 + 10;
+                ctxRef.fillRect(CANVAS_WIDTH / 2 + cursorX, centerY - 40, 4, 80);
+            }
+        }
+
+        function drawBounce(ctxRef, text, frameIndex) {
+            drawBackground(ctxRef, bgColorSelect.value);
+
+            const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+            const bounceProgress = Math.abs(Math.sin(progress * Math.PI * 2));
+
+            ctxRef.font = 'bold 80px Arial, sans-serif';
+            ctxRef.textAlign = 'center';
+            ctxRef.textBaseline = 'middle';
+
+            // Bounce with scale
+            const scale = 0.7 + bounceProgress * 0.3;
+            const offsetY = bounceProgress * 60;
+
+            ctxRef.save();
+            ctxRef.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+            ctxRef.scale(scale, scale);
+
+            // Text with gradient
+            const gradient = ctxRef.createLinearGradient(-200, -50, 200, 50);
+            gradient.addColorStop(0, '#ec4899');
+            gradient.addColorStop(0.5, '#f97316');
+            gradient.addColorStop(1, '#ec4899');
+            ctxRef.fillStyle = gradient;
+
+            ctxRef.fillText(text, 0, offsetY);
+
+            ctxRef.restore();
+
+            // Add sparkles
+            ctxRef.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 3; i++) {
+                const angle = (progress * Math.PI * 2) + (i * Math.PI * 2 / 3);
+                const x = CANVAS_WIDTH / 2 + Math.cos(angle) * 200;
+                const y = CANVAS_HEIGHT / 2 + Math.sin(angle) * 100;
+                ctxRef.beginPath();
+                ctxRef.arc(x, y, 6, 0, Math.PI * 2);
+                ctxRef.fill();
+            }
+        }
+
+        function drawHighlight(ctxRef, text, frameIndex) {
+            drawBackground(ctxRef, bgColorSelect.value);
+
+            const progress = (frameIndex % TOTAL_FRAMES) / TOTAL_FRAMES;
+            const highlightProgress = Math.abs(Math.sin(progress * Math.PI * 2));
+
+            ctxRef.font = 'bold 75px Arial, sans-serif';
+            ctxRef.textAlign = 'center';
+            ctxRef.textBaseline = 'middle';
+
+            const centerY = CANVAS_HEIGHT / 2;
+            const textWidth = ctxRef.measureText(text).width;
+
+            // Background highlight box
+            ctxRef.fillStyle = `rgba(236, 72, 153, ${0.2 + highlightProgress * 0.3})`;
+            ctxRef.shadowColor = 'rgba(236, 72, 153, 0.5)';
+            ctxRef.shadowBlur = 20;
+            ctxRef.fillRect(
+                CANVAS_WIDTH / 2 - textWidth / 2 - 40,
+                centerY - 50,
+                textWidth + 80,
+                100
+            );
+
+            // Text
+            ctxRef.fillStyle = '#fbbf24';
+            ctxRef.shadowColor = '#fbbf24';
+            ctxRef.shadowBlur = 10;
+            ctxRef.fillText(text, CANVAS_WIDTH / 2, centerY);
+        }
+
+        function drawFrame(ctxRef, frameIndex) {
+            const text = textInput.value || 'Make something awesome!';
+            const effect = effectSelect.value;
+
+            switch (effect) {
+                case 'neon':
+                    drawNeonGlow(ctxRef, text, frameIndex);
+                    break;
+                case 'typewriter':
+                    drawTypewriter(ctxRef, text, frameIndex);
+                    break;
+                case 'bounce':
+                    drawBounce(ctxRef, text, frameIndex);
+                    break;
+                case 'highlight':
+                    drawHighlight(ctxRef, text, frameIndex);
+                    break;
+                default:
+                    drawNeonGlow(ctxRef, text, frameIndex);
+            }
+        }
+
+        function showStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = `status active ${type}`;
+            setTimeout(() => {
+                statusEl.classList.remove('active');
+            }, 3000);
+        }
+
+        function animatePreview() {
+            let frameIndex = 0;
+            const animationLoop = setInterval(() => {
+                drawFrame(ctx, frameIndex);
+                frameIndex++;
+            }, 1000 / FPS);
+
+            return animationLoop;
+        }
+
+        let currentPreviewLoop;
+
+        previewBtn.addEventListener('click', () => {
+            if (currentPreviewLoop) {
+                clearInterval(currentPreviewLoop);
+            }
+            currentPreviewLoop = animatePreview();
+            showStatus('Preview playing...', 'info');
+        });
+
+        generateBtn.addEventListener('click', async () => {
+            if (!textInput.value.trim()) {
+                showStatus('Please enter some text!', 'error');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading-spinner"></span>Generating...';
+            showStatus('Rendering video...', 'info');
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = CANVAS_WIDTH;
+                offscreenCanvas.height = CANVAS_HEIGHT;
+                const offscreenCtx = offscreenCanvas.getContext('2d');
+
+                const stream = offscreenCanvas.captureStream(FPS);
+                
+                let mimeType = 'video/webm;codecs=vp9';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'video/webm;codecs=vp8';
+                }
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'video/webm';
+                }
+
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    videoBitsPerSecond: 5000000
+                });
+
+                const chunks = [];
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onerror = (e) => {
+                    console.error('MediaRecorder error:', e);
+                    showStatus('Recording error. Try again.', 'error');
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '🎬 Generate Video';
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `viral-video-${Date.now()}.webm`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    showStatus('✅ Video generated and downloaded!', 'success');
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '🎬 Generate Video';
+                };
+
+                mediaRecorder.start();
+
+                // Draw frames to offscreen canvas
+                const frameInterval = 1000 / FPS;
+                let lastTime = Date.now();
+                let frameCount = 0;
+
+                const renderFrame = () => {
+                    const currentTime = Date.now();
+                    const timePassed = currentTime - lastTime;
+
+                    if (timePassed >= frameInterval) {
+                        offscreenCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                        drawFrame(offscreenCtx, frameCount);
+                        frameCount++;
+                        lastTime = currentTime - (timePassed % frameInterval);
+                    }
+
+                    if (frameCount < TOTAL_FRAMES) {
+                        requestAnimationFrame(renderFrame);
+                    } else {
+                        mediaRecorder.stop();
+                    }
+                };
+
+                renderFrame();
+            } catch (error) {
+                console.error('Error generating video:', error);
+                showStatus('Error generating video. Check console.', 'error');
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '🎬 Generate Video';
+            }
+        });
+
+        // Auto-start preview
+        textInput.addEventListener('input', () => {
+            if (currentPreviewLoop) {
+                clearInterval(currentPreviewLoop);
+            }
+            currentPreviewLoop = animatePreview();
+        });
+
+        // Initial preview
+        currentPreviewLoop = animatePreview();
+    </script>
+</body>
+</html>
