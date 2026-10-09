@@ -1,553 +1,569 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Free Text-to-Speech Generator</title>
-    <style>
-        :root {
-            --bg-1: #0b1120;
-            --bg-2: #111827;
-            --panel: #1f2937;
-            --muted: #94a3b8;
-            --text: #e2e8f0;
-            --line: rgba(148, 163, 184, 0.2);
-            --primary: #8b5cf6;
-            --primary-2: #ec4899;
-            --success: #31c48d;
-            --warning: #fbbf24;
-            --danger: #f87171;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text-to-Speech</title>
+  <style>
+    :root {
+      --bg-1: #0b1120;
+      --bg-2: #111827;
+      --panel: rgba(17, 24, 39, 0.9);
+      --card: rgba(15, 23, 42, 0.86);
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --line: rgba(148, 163, 184, 0.24);
+      --primary: #8b5cf6;
+      --primary-2: #ec4899;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --shadow: rgba(0,0,0,0.25);
+    }
 
-        * { box-sizing: border-box; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 24px 16px;
+    }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
-            color: var(--text);
-            min-height: 100vh;
-            padding: 20px 16px;
-        }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
 
-        .nav {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-        .nav-btn {
-            padding: 10px 16px;
-            border: 1px solid var(--line);
-            background: rgba(31, 41, 55, 0.8);
-            color: var(--text);
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
+    .nav a, .nav button {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: rgba(31, 41, 55, 0.82);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-        .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-2));
-            border-color: var(--primary);
-        }
+    .nav a.primary, .nav button.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-color: transparent;
+    }
 
-        .nav-btn:hover {
-            transform: translateY(-1px);
-        }
+    .app {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px var(--shadow);
+      overflow: hidden;
+    }
 
-        .app {
-            background: rgba(31, 41, 55, 0.92);
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-        }
+    .header {
+      padding: 28px 28px 0 28px;
+    }
 
-        h1 {
-            margin: 0 0 8px;
-            font-size: clamp(28px, 4vw, 44px);
-            background: linear-gradient(135deg, #a78bfa, #f472b6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
 
-        .subtitle {
-            color: var(--muted);
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 22px;
+      line-height: 1.6;
+    }
 
-        .layout {
-            display: grid;
-            grid-template-columns: 1fr 0.85fr;
-            gap: 24px;
-        }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      padding: 0 28px 28px;
+    }
 
-        .panel {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            padding: 18px;
-        }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+    }
 
-        .field {
-            margin-bottom: 16px;
-        }
+    .field {
+      margin-bottom: 16px;
+    }
 
-        label {
-            display: block;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #cbd5e1;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #dbeafe;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
 
-        textarea,
-        select,
-        input[type="text"] {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 15px;
-            font-family: inherit;
-        }
+    textarea,
+    select,
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+    }
 
-        textarea {
-            min-height: 160px;
-            resize: vertical;
-        }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
 
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
 
-        button {
-            border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
 
-        button:hover { transform: translateY(-1px); }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-2));
-            color: white;
-        }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white;
+    }
 
-        .btn-secondary {
-            background: rgba(148, 163, 184, 0.12);
-            color: var(--text);
-            border: 1px solid var(--line);
-        }
+    .btn-secondary {
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
 
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
+    .status {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
-        .status {
-            margin-top: 16px;
-            min-height: 48px;
-            border-radius: 12px;
-            padding: 12px 14px;
-            display: none;
-            font-size: 14px;
-        }
+    .status.show { display: block; }
+    .status.info { background: rgba(59,130,246,0.10); color: #dbeafe; border: 1px solid rgba(96,165,250,0.25); }
+    .status.success { background: rgba(52,211,153,0.10); color: #bbf7d0; border: 1px solid rgba(52,211,153,0.25); }
+    .status.error { background: rgba(248,113,113,0.10); color: #fecaca; border: 1px solid rgba(248,113,113,0.2); }
+    .status.warning { background: rgba(251,191,36,0.10); color: #fde68a; border: 1px solid rgba(251,191,36,0.2); }
 
-        .status.show { display: block; }
-        .status.info { background: rgba(59,130,246,0.12); color: #bfdbfe; border: 1px solid rgba(59,130,246,0.22); }
-        .status.success { background: rgba(52,211,153,0.12); color: #bbf7d0; border: 1px solid rgba(52,211,153,0.24); }
-        .status.error { background: rgba(248,113,113,0.12); color: #fecaca; border: 1px solid rgba(248,113,113,0.25); }
-        .status.warning { background: rgba(251,191,36,0.12); color: #fde047; border: 1px solid rgba(251,191,36,0.24); }
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-        .voice-info {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 12px;
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--muted);
-        }
+    .pill {
+      display: inline-block;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(148, 163, 184, 0.08);
+    }
 
-        .voice-info strong {
-            color: var(--text);
-        }
+    .notice {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(251,191,36,0.08);
+      color: #fef3c7;
+      border: 1px solid rgba(251,191,36,0.22);
+      line-height: 1.6;
+      font-size: 13px;
+    }
 
-        .audio-controls {
-            margin-top: 16px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+    .audio-wrap {
+      margin-top: 16px;
+    }
+    audio {
+      width: 100%;
+      margin-top: 8px;
+    }
 
-        audio {
-            width: 100%;
-            margin-top: 12px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(148,163,184,0.2);
-            border-radius: 999px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--primary-2));
-            width: 0%;
-        }
-
-        .meta {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .pill {
-            display: inline-block;
-            padding: 6px 10px;
-            background: rgba(148,163,184,0.08);
-            border: 1px solid var(--line);
-            border-radius: 6px;
-        }
-
-        .history-item {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 10px;
-            font-size: 13px;
-        }
-
-        .history-text {
-            color: var(--text);
-            margin-bottom: 6px;
-            line-height: 1.5;
-        }
-
-        .history-meta {
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .history-btn {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 6px 10px;
-            background: rgba(139, 92, 246, 0.2);
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            border-radius: 6px;
-            color: #c4b5fd;
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: none;
-        }
-
-        .history-btn:hover {
-            background: rgba(139, 92, 246, 0.3);
-        }
-
-        #videoTab { display: none; }
-
-        @media (max-width: 900px) {
-            .layout { grid-template-columns: 1fr; }
-        }
-    </style>
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="nav">
-            <button class="nav-btn active" data-tab="tts">🎤 Text-to-Speech</button>
-            <button class="nav-btn" data-tab="video">🎬 Video Generator</button>
-        </div>
-
-        <div id="ttsTab" class="app">
-            <h1>🎤 Free Text-to-Speech</h1>
-            <div class="subtitle">Generate spoken audio using your browser's native voices. No server needed, no paid APIs.</div>
-
-            <div class="layout">
-                <div class="panel">
-                    <div class="field">
-                        <label for="ttsText">Text to Speak</label>
-                        <textarea id="ttsText" placeholder="Type or paste text here...">नमस्ते! यह एक स्वतंत्र पाठ-से-भाषण परीक्षण है।</textarea>
-                    </div>
-
-                    <div class="field">
-                        <label for="ttsLanguage">Language</label>
-                        <select id="ttsLanguage">
-                            <option value="en-US">English (US)</option>
-                            <option value="en-GB">English (UK)</option>
-                            <option value="hi-IN">Hindi</option>
-                            <option value="gu-IN">Gujarati</option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label for="ttsVoice">Voice</label>
-                        <select id="ttsVoice"></select>
-                    </div>
-
-                    <div class="field">
-                        <label for="ttsSpeed">Speed</label>
-                        <input type="range" id="ttsSpeed" min="0.5" max="2" step="0.1" value="1" style="width: 100%; padding: 0;" />
-                        <span id="speedValue" style="font-size: 12px; color: var(--muted);">1.0x</span>
-                    </div>
-
-                    <div class="toolbar">
-                        <button id="speakBtn" class="btn-primary">Speak</button>
-                        <button id="pauseBtn" class="btn-secondary">Pause</button>
-                        <button id="resumeBtn" class="btn-secondary">Resume</button>
-                        <button id="stopBtn" class="btn-secondary">Stop</button>
-                        <button id="clearBtn" class="btn-secondary">Clear</button>
-                    </div>
-
-                    <div id="ttsStatus" class="status"></div>
-
-                    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-
-                    <div class="meta">
-                        <div class="pill" id="referenceVoice">Reference: Standard recording 32_20261008192509.mp3</div>
-                        <div class="pill" id="ttsStatus2">Status: Idle</div>
-                    </div>
-
-                    <div class="voice-info">
-                        <strong>⚠️ Important:</strong> This tool uses your browser's built-in speech synthesis (Web Speech API). 
-                        The system voices may not sound exactly like your reference voice sample. 
-                        <strong>Your voice file is never uploaded anywhere.</strong> Select a language and voice from the dropdown above.
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <label style="margin-bottom: 8px;">📜 Recent Generations</label>
-                    <div id="historyContainer"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="videoTab" class="app">
-            <iframe src="index.html" style="width: 100%; border: none; border-radius: 18px; min-height: 800px;"></iframe>
-        </div>
+  <div class="container">
+    <div class="topbar">
+      <div class="nav">
+        <a href="/">🏠 Home</a>
+        <a href="/tts.html" class="primary">🎤 Text-to-Speech</a>
+      </div>
     </div>
 
-    <script>
-        const ttsText = document.getElementById('ttsText');
-        const ttsLanguage = document.getElementById('ttsLanguage');
-        const ttsVoice = document.getElementById('ttsVoice');
-        const ttsSpeed = document.getElementById('ttsSpeed');
-        const speedValue = document.getElementById('speedValue');
-        const speakBtn = document.getElementById('speakBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resumeBtn = document.getElementById('resumeBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const ttsStatus = document.getElementById('ttsStatus');
-        const ttsStatus2 = document.getElementById('ttsStatus2');
-        const historyContainer = document.getElementById('historyContainer');
-        const progressFill = document.getElementById('progressFill');
+    <div class="app">
+      <div class="header">
+        <h1>🎤 Text-to-Speech Studio</h1>
+        <p class="subtitle">
+          Use the browser's built-in Web Speech API for instant playback, or generate a custom voice through the secure ElevenLabs proxy when your Vercel environment variables are configured.
+        </p>
+      </div>
 
-        const synth = window.speechSynthesis;
-        let utterance = null;
-        const HISTORY_KEY = 'tts-history';
+      <div class="layout">
+        <div class="panel">
+          <div class="field">
+            <label for="ttsText">Text to Speak</label>
+            <textarea id="ttsText" placeholder="Type Gujarati, Hindi, or English text here...">નમસ્તે! આ મારી ગુજરાતી અવાજ યંત્ર છે.</textarea>
+          </div>
 
-        // Tab switching
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.dataset.tab;
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('ttsTab').style.display = tab === 'tts' ? 'block' : 'none';
-                document.getElementById('videoTab').style.display = tab === 'video' ? 'block' : 'none';
-                btn.classList.add('active');
-            });
+          <div class="field">
+            <label for="ttsLanguage">Language</label>
+            <select id="ttsLanguage">
+              <option value="en-US">English (US)</option>
+              <option value="hi-IN">Hindi</option>
+              <option value="gu-IN" selected>Gujarati</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ttsVoice">Voice</label>
+            <select id="ttsVoice"></select>
+          </div>
+
+          <div class="field">
+            <label for="voiceReference">Reference MP3 for custom voice cloning</label>
+            <input id="voiceReference" type="file" accept="audio/*" />
+          </div>
+
+          <div class="toolbar">
+            <button id="createVoiceBtn" class="btn-secondary">Create Custom Voice</button>
+            <button id="generateBtn" class="btn-primary">Generate Audio</button>
+            <button id="speakBtn" class="btn-secondary">Speak</button>
+            <button id="pauseBtn" class="btn-secondary">Pause</button>
+            <button id="resumeBtn" class="btn-secondary">Resume</button>
+            <button id="stopBtn" class="btn-secondary">Stop</button>
+            <button id="clearBtn" class="btn-secondary">Clear</button>
+          </div>
+
+          <div id="ttsStatus" class="status"></div>
+
+          <div class="meta">
+            <div class="pill" id="configPill">Status: checking ElevenLabs...</div>
+            <div class="pill" id="voiceModePill">Mode: browser speech</div>
+          </div>
+
+          <div class="notice">
+            <strong>Important:</strong> The uploaded MP3 is used as a reference for a custom ElevenLabs voice only when the ElevenLabs API is configured in Vercel Environment Variables. It is not used for real voice cloning unless that service is enabled. The browser Web Speech API is used as a free fallback when custom voice settings are unavailable.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0; margin-bottom:14px;">Playback</h3>
+          <div class="audio-wrap">
+            <audio id="ttsAudio" controls></audio>
+            <div style="margin-top:10px;">
+              <a id="downloadLink" href="#" download="tts-output.mp3" style="display:none; color:#c4b5fd; font-weight:700;">Download MP3</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ttsText = document.getElementById('ttsText');
+    const ttsLanguage = document.getElementById('ttsLanguage');
+    const ttsVoice = document.getElementById('ttsVoice');
+    const ttsAudio = document.getElementById('ttsAudio');
+    const ttsStatus = document.getElementById('ttsStatus');
+    const configPill = document.getElementById('configPill');
+    const voiceModePill = document.getElementById('voiceModePill');
+    const downloadLink = document.getElementById('downloadLink');
+    const voiceReference = document.getElementById('voiceReference');
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
+    let browserVoices = [];
+    let customVoiceId = localStorage.getItem('elevenlabs-voice-id') || '';
+    let customVoiceName = localStorage.getItem('elevenlabs-voice-name') || '';
+    let customVoiceConfigured = false;
+    let customVoiceMode = false;
+
+    function setStatus(message, type = 'info') {
+      ttsStatus.textContent = message;
+      ttsStatus.className = `status show ${type}`;
+      setTimeout(() => {
+        ttsStatus.classList.remove('show');
+      }, 5000);
+    }
+
+    function loadBrowserVoices() {
+      browserVoices = synth.getVoices();
+      const language = ttsLanguage.value.split('-')[0];
+      const filtered = browserVoices.filter(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
+
+      ttsVoice.innerHTML = '';
+      if (filtered.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = 'browser-default';
+        opt.textContent = 'Browser default voice';
+        ttsVoice.appendChild(opt);
+        return;
+      }
+
+      filtered.forEach((voice, index) => {
+        const opt = document.createElement('option');
+        opt.value = String(index);
+        opt.textContent = `${voice.name}${voice.default ? ' (default)' : ''}`;
+        ttsVoice.appendChild(opt);
+      });
+    }
+
+    function updateModeLabel() {
+      const useCustom = customVoiceConfigured && customVoiceId && customVoiceMode;
+      voiceModePill.textContent = useCustom ? `Mode: custom voice (${customVoiceName || 'ElevenLabs'})` : 'Mode: browser speech';
+    }
+
+    async function checkServerConfig() {
+      try {
+        const response = await fetch('/api/elevenlabs', { method: 'GET' });
+        if (!response.ok) throw new Error('No API route');
+        const data = await response.json();
+        customVoiceConfigured = Boolean(data.configured && data.hasVoiceId);
+        if (customVoiceConfigured && !customVoiceId) {
+          customVoiceId = localStorage.getItem('elevenlabs-voice-id') || '';
+        }
+        configPill.textContent = customVoiceConfigured
+          ? 'Status: ElevenLabs ready'
+          : 'Status: ElevenLabs not configured';
+      } catch {
+        configPill.textContent = 'Status: ElevenLabs not configured';
+        customVoiceConfigured = false;
+      }
+      updateModeLabel();
+    }
+
+    async function createVoiceFromReference() {
+      const file = voiceReference.files[0];
+      if (!file) {
+        setStatus('Please choose an MP3 or WAV reference file first.', 'warning');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          setStatus('Creating custom ElevenLabs voice from your reference audio...', 'info');
+          const response = await fetch('/api/elevenlabs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'create-voice',
+              voiceName: `Custom Voice ${new Date().toISOString()}`,
+              fileName: file.name,
+              mimeType: file.type || 'audio/mpeg',
+              voiceReferenceDataUrl: reader.result
+            })
+          });
+
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || 'Voice creation failed');
+          }
+
+          customVoiceId = result.voice_id || '';
+          customVoiceName = result.voice_name || 'Custom voice';
+          localStorage.setItem('elevenlabs-voice-id', customVoiceId);
+          localStorage.setItem('elevenlabs-voice-name', customVoiceName);
+          customVoiceConfigured = true;
+          customVoiceMode = true;
+          updateModeLabel();
+          setStatus(`Custom voice created successfully. Voice ID saved locally for this browser. Add it to Vercel Environment Variables as ELEVENLABS_VOICE_ID for persistent use.`, 'success');
+        } catch (error) {
+          setStatus(error.message || 'Unable to create voice from the uploaded reference.', 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function generateWithElevenLabs() {
+      if (!customVoiceId) {
+        setStatus('No custom voice is available. Upload a reference MP3 first or configure ELEVENLABS_VOICE_ID in Vercel.', 'warning');
+        return;
+      }
+
+      const text = ttsText.value.trim();
+      if (!text) {
+        setStatus('Please enter text before generating audio.', 'warning');
+        return;
+      }
+
+      try {
+        setStatus('Generating custom voice audio with ElevenLabs...', 'info');
+        const response = await fetch('/api/elevenlabs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'tts',
+            text,
+            language: ttsLanguage.value,
+            voiceId: customVoiceId,
+            modelId: 'eleven_multilingual_v2'
+          })
         });
 
-        function showStatus(msg, type = 'info') {
-            ttsStatus.textContent = msg;
-            ttsStatus.className = `status show ${type}`;
-            ttsStatus2.textContent = 'Status: ' + (type === 'success' ? 'Ready' : type === 'error' ? 'Error' : 'Speaking');
-            clearTimeout(showStatus.timeout);
-            showStatus.timeout = setTimeout(() => {
-                ttsStatus.classList.remove('show');
-            }, 4000);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Unable to generate custom voice audio.');
         }
 
-        function loadVoices() {
-            const voices = synth.getVoices();
-            const lang = ttsLanguage.value;
-            ttsVoice.innerHTML = '';
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        ttsAudio.src = url;
+        downloadLink.href = url;
+        downloadLink.style.display = 'inline';
+        downloadLink.setAttribute('download', 'custom-voice-output.mp3');
+        ttsAudio.play();
+        setStatus('Custom voice audio generated and playing.', 'success');
+      } catch (error) {
+        setStatus(error.message || 'Unable to generate audio.', 'error');
+      }
+    }
 
-            const filtered = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
-            if (filtered.length === 0) {
-                ttsVoice.innerHTML = '<option>Default voice</option>';
-                return;
-            }
+    function speakWithBrowser() {
+      const text = ttsText.value.trim();
+      if (!text) {
+        setStatus('Please enter text before speaking.', 'warning');
+        return;
+      }
 
-            filtered.forEach((voice, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx;
-                opt.textContent = voice.name + (voice.default ? ' (default)' : '');
-                ttsVoice.appendChild(opt);
-            });
-        }
+      if (currentUtterance) {
+        synth.cancel();
+      }
 
-        synth.addEventListener('voiceschanged', loadVoices);
-        loadVoices();
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.lang = ttsLanguage.value;
 
-        ttsLanguage.addEventListener('change', loadVoices);
-        ttsSpeed.addEventListener('change', () => {
-            speedValue.textContent = ttsSpeed.value + 'x';
-        });
+      const voices = synth.getVoices();
+      const selectedIndex = Number(ttsVoice.value);
+      if (voices[selectedIndex]) {
+        currentUtterance.voice = voices[selectedIndex];
+      }
 
-        function saveToHistory(text, lang, voice) {
-            try {
-                let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                history.unshift({
-                    text: text.slice(0, 100),
-                    lang,
-                    voice,
-                    time: new Date().toLocaleTimeString()
-                });
-                localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 8)));
-                renderHistory();
-            } catch (e) {
-                console.error('History save failed:', e);
-            }
-        }
+      currentUtterance.onstart = () => setStatus('Speaking with browser voice...', 'info');
+      currentUtterance.onend = () => setStatus('Speech complete.', 'success');
+      currentUtterance.onerror = () => setStatus('Browser speech failed.', 'error');
+      synth.speak(currentUtterance);
+    }
 
-        function renderHistory() {
-            try {
-                const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                if (history.length === 0) {
-                    historyContainer.innerHTML = '<div class="voice-info">No generations yet.</div>';
-                    return;
-                }
-                historyContainer.innerHTML = history.map((item, i) => `
-                    <div class="history-item">
-                        <div class="history-text">"${item.text}${item.text.length > 100 ? '...' : ''}"</div>
-                        <div class="history-meta">🗣️ ${item.voice} • 🌐 ${item.lang} • ${item.time}</div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                historyContainer.innerHTML = '<div class="voice-info">Unable to load history.</div>';
-            }
-        }
+    function pauseCurrent() {
+      if (ttsAudio && !ttsAudio.paused && !ttsAudio.ended) {
+        ttsAudio.pause();
+        setStatus('Playback paused.', 'info');
+        return;
+      }
+      if (synth.speaking && !synth.paused) {
+        synth.pause();
+        setStatus('Paused.', 'info');
+      }
+    }
 
-        speakBtn.addEventListener('click', () => {
-            const text = ttsText.value.trim();
-            if (!text) {
-                showStatus('Please enter text to speak.', 'warning');
-                return;
-            }
+    function resumeCurrent() {
+      if (ttsAudio && ttsAudio.paused && ttsAudio.currentTime > 0) {
+        ttsAudio.play();
+        setStatus('Playback resumed.', 'info');
+        return;
+      }
+      if (synth.paused) {
+        synth.resume();
+        setStatus('Resumed.', 'info');
+      }
+    }
 
-            synth.cancel();
-            utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = ttsLanguage.value;
-            utterance.rate = parseFloat(ttsSpeed.value);
+    function stopCurrent() {
+      if (ttsAudio) {
+        ttsAudio.pause();
+        ttsAudio.currentTime = 0;
+      }
+      if (synth.speaking || synth.paused) {
+        synth.cancel();
+      }
+      setStatus('Stopped.', 'info');
+    }
 
-            const voices = synth.getVoices();
-            const voiceIdx = parseInt(ttsVoice.value);
-            if (voiceIdx >= 0 && voiceIdx < voices.length) {
-                utterance.voice = voices[voiceIdx];
-            }
+    document.getElementById('createVoiceBtn').addEventListener('click', createVoiceFromReference);
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      if (customVoiceConfigured && customVoiceId && customVoiceMode) {
+        await generateWithElevenLabs();
+      } else {
+        speakWithBrowser();
+      }
+    });
 
-            utterance.onstart = () => {
-                showStatus('Speaking...', 'info');
-                progressFill.style.width = '0%';
-                speakBtn.disabled = true;
-                pauseBtn.disabled = false;
-                resumeBtn.disabled = false;
-                stopBtn.disabled = false;
-            };
+    document.getElementById('speakBtn').addEventListener('click', () => {
+      if (customVoiceConfigured && customVoiceId && customVoiceMode) {
+        generateWithElevenLabs();
+      } else {
+        speakWithBrowser();
+      }
+    });
 
-            utterance.onend = () => {
-                showStatus('Speech complete.', 'success');
-                progressFill.style.width = '100%';
-                speakBtn.disabled = false;
-                pauseBtn.disabled = true;
-                resumeBtn.disabled = true;
-                stopBtn.disabled = true;
-                saveToHistory(text, ttsLanguage.value, ttsVoice.options[ttsVoice.selectedIndex]?.text || 'System voice');
-            };
+    document.getElementById('pauseBtn').addEventListener('click', pauseCurrent);
+    document.getElementById('resumeBtn').addEventListener('click', resumeCurrent);
+    document.getElementById('stopBtn').addEventListener('click', stopCurrent);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      ttsText.value = '';
+      setStatus('Text cleared.', 'info');
+    });
 
-            utterance.onerror = (e) => {
-                showStatus('Error: ' + e.error, 'error');
-                speakBtn.disabled = false;
-                pauseBtn.disabled = true;
-                resumeBtn.disabled = true;
-                stopBtn.disabled = true;
-            };
+    ttsLanguage.addEventListener('change', () => {
+      loadBrowserVoices();
+    });
 
-            utterance.onboundary = () => {
-                const progress = Math.min(100, (synth.paused ? 50 : Math.random() * 80 + 20));
-                progressFill.style.width = progress + '%';
-            };
+    document.getElementById('ttsVoice').addEventListener('change', () => {
+      customVoiceMode = false;
+      updateModeLabel();
+    });
 
-            synth.speak(utterance);
-        });
+    speechSynthesis.onvoiceschanged = () => loadBrowserVoices();
 
-        pauseBtn.addEventListener('click', () => {
-            if (synth.speaking && !synth.paused) {
-                synth.pause();
-                showStatus('Paused.', 'info');
-                pauseBtn.disabled = true;
-                resumeBtn.disabled = false;
-            }
-        });
-
-        resumeBtn.addEventListener('click', () => {
-            if (synth.paused) {
-                synth.resume();
-                showStatus('Resumed.', 'info');
-                pauseBtn.disabled = false;
-                resumeBtn.disabled = true;
-            }
-        });
-
-        stopBtn.addEventListener('click', () => {
-            synth.cancel();
-            showStatus('Stopped.', 'info');
-            progressFill.style.width = '0%';
-            speakBtn.disabled = false;
-            pauseBtn.disabled = true;
-            resumeBtn.disabled = true;
-            stopBtn.disabled = true;
-        });
-
-        clearBtn.addEventListener('click', () => {
-            ttsText.value = '';
-            showStatus('Text cleared.', 'info');
-        });
-
-        renderHistory();
-    </script>
+    loadBrowserVoices();
+    checkServerConfig();
+  </script>
 </body>
 </html>
