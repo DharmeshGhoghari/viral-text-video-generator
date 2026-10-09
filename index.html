@@ -1,27 +1,810 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Typing Text Video Generator</title>
-<style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:30px;display:grid;place-items:center;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e2e8f0;background:linear-gradient(135deg,#0f172a,#1e293b)}.app{width:min(920px,100%);padding:24px;border:1px solid #334155;border-radius:24px;background:#0f172add;box-shadow:0 20px 60px #0008}.head{text-align:center;margin-bottom:20px}.head h1{margin:0 0 8px;font-size:clamp(24px,5vw,34px);background:linear-gradient(90deg,#ec4899,#f97316);color:transparent;background-clip:text}.head p{margin:0;color:#94a3b8;font-size:14px}.langs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:18px 0}.lang{padding:7px 10px;border:1px solid #475569;border-radius:9px;background:#1e293b;color:#cbd5e1;font-weight:700;font-size:11px;cursor:pointer}.lang.active{border-color:#ec4899;background:linear-gradient(135deg,#ec4899,#f97316);color:#fff}.grid{display:grid;grid-template-columns:1fr;gap:24px}@media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}.controls{display:grid;align-content:start;gap:15px}label{display:grid;gap:7px;color:#cbd5e1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}textarea,select{width:100%;padding:13px 14px;border:1px solid #475569;border-radius:12px;background:#1e293b;color:#f8fafc;font:inherit;font-size:16px;resize:vertical}textarea:focus,select:focus{outline:2px solid #ec4899;outline-offset:1px}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{padding:13px;border:0;border-radius:12px;font:700 14px inherit;cursor:pointer}.primary{color:#fff;background:linear-gradient(135deg,#ec4899,#f97316);box-shadow:0 8px 22px #ec489955}.secondary{color:#e2e8f0;background:#334155}.btn:disabled{opacity:.55;cursor:wait}.status{min-height:20px;padding:10px;border-radius:10px;text-align:center;font-size:13px}.status:empty{padding:0}.status.info{background:#1d4ed822;color:#93c5fd}.status.ok{background:#16a34a22;color:#86efac}.status.error{background:#dc262622;color:#fca5a5}.preview-title{font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:.06em}.preview{width:min(100%,280px);aspect-ratio:9/16;margin:auto;border:2px solid #475569;border-radius:16px;overflow:hidden;background:#020617;box-shadow:0 16px 40px #0008}.preview canvas{width:100%;height:100%;display:block}.note{margin:0;text-align:center;color:#64748b;font-size:12px}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viral Text Video Generator</title>
+    <style>
+        :root {
+            --bg-1: #0f172a;
+            --bg-2: #1e293b;
+            --panel: rgba(15, 23, 42, 0.8);
+            --muted: #94a3b8;
+            --text: #e2e8f0;
+            --line: rgba(148, 163, 184, 0.2);
+            --accent-1: #ec4899;
+            --accent-2: #f97316;
+            --success: #86efac;
+            --error: #fca5a5;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 30px 16px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .app {
+            width: min(960px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .language-selector {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .lang-btn {
+            border: 1px solid var(--line);
+            background: rgba(148, 163, 184, 0.08);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            border-color: var(--accent-1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 780px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .controls {
+            display: grid;
+            gap: 14px;
+            align-content: start;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #cbd5e1;
+        }
+
+        textarea, select, input[type="file"] {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        select, input[type="file"] {
+            min-height: 46px;
+        }
+
+        textarea:focus, select:focus, input[type="file"]:focus {
+            outline: 2px solid rgba(236, 72, 153, 0.7);
+            outline-offset: 2px;
+        }
+
+        .voice-box {
+            display: grid;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.35);
+        }
+
+        .voice-info {
+            font-size: 12px;
+            color: var(--muted);
+            word-break: break-all;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+
+        .primary {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(236, 72, 153, 0.25);
+        }
+
+        .secondary {
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .btn:disabled {
+            cursor: wait;
+            opacity: 0.6;
+        }
+
+        .status {
+            min-height: 22px;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.12);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .preview-head {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+        }
+
+        .preview-box {
+            width: min(100%, 300px);
+            aspect-ratio: 9 / 16;
+            margin: 0 auto;
+            border-radius: 18px;
+            border: 2px solid var(--line);
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .note {
+            margin: 0;
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-<main class="app"><header class="head"><h1>⌨️ Typing Text Video Generator</h1><p id="subtitle">Create a 15-second 9:16 video for Shorts and Reels</p></header><nav class="langs" id="langs" aria-label="Language"></nav><section class="grid"><div class="controls"><label id="textLabel">Your Text<textarea id="text" maxlength="200" rows="3" placeholder="Type your message...">Make something awesome!</textarea></label><label id="bgLabel">Background<select id="background"><option value="dark">Dark Gradient</option><option value="purple">Purple Vibes</option><option value="sunset">Sunset</option><option value="ocean">Ocean Blue</option><option value="black">Solid Black</option></select></label><div class="buttons"><button class="btn primary" id="generate">🎬 Generate Video</button><button class="btn secondary" id="preview">▶ Preview</button></div><div class="status" id="status"></div><p class="note">Typing effect only • 15 seconds • 720×1280 • 30 FPS • .webm</p></div><div><div class="preview-title">Live Preview</div><div class="preview"><canvas id="canvas" width="720" height="1280"></canvas></div></div></section></main>
-<script>
-const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d'),text=$('text'),bg=$('background'),status=$('status'),W=720,H=1280,FPS=30,FRAMES=450;
-const bgMap={dark:['#0f172a','#1e293b'],purple:['#2d1b69','#6d28d9'],sunset:['#7c2d12','#ea580c'],ocean:['#0c4a6e','#0369a1'],black:['#000','#000']};
-const languages={en:['English','Your Text','Background','Live Preview','Type your message...'],es:['Español','Tu texto','Fondo','Vista previa','Escribe tu mensaje...'],fr:['Français','Votre texte','Arrière-plan','Aperçu','Écrivez votre message...'],de:['Deutsch','Ihr Text','Hintergrund','Live-Vorschau','Ihre Nachricht eingeben...'],it:['Italiano','Il tuo testo','Sfondo','Anteprima','Scrivi il tuo messaggio...'],pt:['Português','Seu texto','Fundo','Visualização','Digite sua mensagem...'],ja:['日本語','テキスト','背景','ライブプレビュー','メッセージを入力...'],zh:['中文','您的文本','背景','实时预览','输入您的消息...'],ar:['العربية','نصك','الخلفية','معاينة مباشرة','اكتب رسالتك...'],ko:['한국어','텍스트','배경','라이브 미리보기','메시지를 입력하세요...'],ru:['Русский','Ваш текст','Фон','Предпросмотр','Введите сообщение...']};
-let timer,lang='en';
-$('langs').innerHTML=Object.keys(languages).map(k=>`<button class="lang ${k==='en'?'active':''}" data-lang="${k}">${k.toUpperCase()}</button>`).join('');$('langs').onclick=e=>{if(e.target.dataset.lang)setLanguage(e.target.dataset.lang)};
-function setLanguage(k){lang=k;const t=languages[k];$('textLabel').childNodes[0].textContent=t[1];$('bgLabel').childNodes[0].textContent=t[2];document.querySelector('.preview-title').textContent=t[3];text.placeholder=t[4];$('subtitle').textContent=k==='en'?'Create a 15-second 9:16 video for Shorts and Reels':'15-second 9:16 vertical typing video';document.documentElement.lang=k;document.documentElement.dir=k==='ar'?'rtl':'ltr';document.querySelectorAll('.lang').forEach(b=>b.classList.toggle('active',b.dataset.lang===k));draw(0)}
-function background(c){const g=c.createLinearGradient(0,0,W,H),colors=bgMap[bg.value]||bgMap.dark;g.addColorStop(0,colors[0]);g.addColorStop(1,colors[1]);c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='#ec489915';for(let i=0;i<6;i++){c.beginPath();c.arc((i*149+40)%W,(i*271+90)%H,35+i*8,0,Math.PI*2);c.fill()}}
-// Creates the final line layout first, so the text stays in the same position while characters appear.
-function layout(c,value,maxWidth){c.font='700 56px system-ui,sans-serif';const lines=[];value.split('\n').forEach(paragraph=>{if(!paragraph){lines.push('');return}let line='';paragraph.split(/\s+/).forEach(word=>{const candidate=line?line+' '+word:word;if(c.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word}else line=candidate});if(line)lines.push(line)});return lines.length?lines:['']}
-function draw(frame,c=ctx){background(c);const value=text.value.trim()||'Type your message...';const finalLines=layout(c,value,600);const reveal=Math.min(value.length,Math.floor((frame/(FRAMES-1))*value.length*1.4));let remaining=reveal,visible=[];for(const line of finalLines){const take=Math.min(line.length,remaining);visible.push(line.slice(0,take));remaining-=take;if(remaining<=0)break}const shown=visible.join('\n');const pulse=.95+Math.sin(frame/10)*.02;c.save();c.translate(W/2,H/2);c.scale(pulse,pulse);c.font='700 56px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';c.shadowColor='#ec4899';c.shadowBlur=16;c.fillStyle='#f8fafc';const lineHeight=80,startY=-((finalLines.length-1)*lineHeight)/2;visible.forEach((line,i)=>c.fillText(line,0,startY+i*lineHeight));if(reveal<value.length||frame%30<18){const currentLine=visible[visible.length-1]||'';const lineIndex=Math.max(0,visible.length-1);const cursorX=c.measureText(currentLine)/2+8,cursorY=startY+lineIndex*lineHeight;c.shadowBlur=0;c.fillStyle='#ec4899';c.fillRect(cursorX,cursorY-28,5,56)}c.restore()}
-function show(message,type='info'){status.textContent=message;status.className='status '+type}function animate(){clearInterval(timer);let f=0;timer=setInterval(()=>draw(f++%FRAMES),1000/FPS)}
-$('preview').onclick=()=>{animate();show('Preview playing...')};text.oninput=()=>{draw(0);animate()};bg.onchange=()=>draw(0);animate();
-$('generate').onclick=()=>{if(!text.value.trim()){show('Please enter some text!','error');return}if(!window.MediaRecorder||!canvas.captureStream){show('This browser does not support video recording.','error');return}const button=$('generate');button.disabled=true;show('Rendering 15-second video...');const out=document.createElement('canvas');out.width=W;out.height=H;const stream=out.captureStream(FPS),outCtx=out.getContext('2d');let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000}),chunks=[];recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);recorder.onstop=()=>{const url=URL.createObjectURL(new Blob(chunks,{type:'video/webm'})),a=document.createElement('a');a.href=url;a.download='typing-video-'+Date.now()+'.webm';a.click();URL.revokeObjectURL(url);button.disabled=false;show('✅ Video generated and downloaded!','ok')};recorder.onerror=()=>{button.disabled=false;show('Recording error. Try again.','error')};recorder.start();let f=0;const tick=()=>{draw(f++,outCtx);if(f<FRAMES)requestAnimationFrame(tick);else recorder.stop()};tick()};
-</script></body></html>
+    <div class="app">
+        <header class="header">
+            <h1 id="title">✨ Viral Text Video Generator</h1>
+            <p id="subtitle">Create a typing video using your uploaded voice</p>
+        </header>
+
+        <div class="language-selector" id="languageSelector"></div>
+
+        <div class="grid">
+            <div class="controls">
+                <div class="field">
+                    <label for="textInput">Your Text</label>
+                    <textarea id="textInput" maxlength="220" placeholder="Type your message here...">Make something awesome!</textarea>
+                </div>
+
+                <div class="field">
+                    <label for="effectSelect">Text Effect</label>
+                    <select id="effectSelect"></select>
+                </div>
+
+                <div class="field">
+                    <label for="bgColorSelect">Background Style</label>
+                    <select id="bgColorSelect"></select>
+                </div>
+
+                <div class="field">
+                    <label for="voiceInput">Your Voice File</label>
+                    <div class="voice-box">
+                        <input id="voiceInput" type="file" accept="audio/*" />
+                        <div class="voice-info" id="voiceInfo">No voice uploaded yet. Upload your recorded voice and it will be used in the final video.</div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button id="generateBtn" class="btn primary">Generate Video</button>
+                    <button id="previewBtn" class="btn secondary">Preview</button>
+                </div>
+
+                <div id="status" class="status"></div>
+                <p class="note">Uses your uploaded voice file for the final video • mobile recorded voice supported • .webm export</p>
+            </div>
+
+            <div>
+                <div class="preview-head">Live Preview</div>
+                <div class="preview-box">
+                    <canvas id="canvas" width="720" height="1280"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('textInput');
+        const effectSelect = document.getElementById('effectSelect');
+        const bgColorSelect = document.getElementById('bgColorSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const statusEl = document.getElementById('status');
+        const languageSelector = document.getElementById('languageSelector');
+        const voiceInput = document.getElementById('voiceInput');
+        const voiceInfo = document.getElementById('voiceInfo');
+
+        const CANVAS_WIDTH = 720;
+        const CANVAS_HEIGHT = 1280;
+        const FPS = 30;
+        const DEFAULT_DURATION = 15;
+
+        let currentLanguage = 'en';
+        let currentPreviewTimer = null;
+        let uploadedVoiceURL = null;
+        let uploadedVoiceDuration = DEFAULT_DURATION;
+
+        const translations = {
+            en: {
+                title: '✨ Viral Text Video Generator',
+                subtitle: 'Create a typing video using your uploaded voice',
+                textLabel: 'Your Text',
+                previewLabel: 'Live Preview',
+                generateText: 'Generate Video',
+                previewText: 'Preview',
+                statusEmpty: 'Upload your voice file before generating video.',
+                statusRender: 'Rendering video with your voice...',
+                statusSuccess: '✅ Video generated and downloaded!',
+                statusError: 'Please enter text first.',
+                statusNoVoice: 'Please upload a voice file first.',
+                voicePrompt: 'No voice uploaded yet. Upload your recorded voice and it will be used in the final video.',
+                effects: {
+                    neon: '🌟 Neon Glow',
+                    typewriter: '⌨️ Typewriter',
+                    bounce: '🎈 Bounce',
+                    highlight: '🎬 Highlight'
+                },
+                backgrounds: {
+                    'gradient-dark': 'Dark Gradient',
+                    'gradient-purple': 'Purple Vibes',
+                    'gradient-sunset': 'Sunset',
+                    'gradient-ocean': 'Ocean Blue',
+                    'black': 'Solid Black'
+                }
+            },
+            hi: {
+                title: '✨ वायरल टेक्स्ट वीडियो जनरेटर',
+                subtitle: 'अपनी अपलोड की गई आवाज़ के साथ टाइपिंग वीडियो बनाएं',
+                textLabel: 'आपका टेक्स्ट',
+                previewLabel: 'लाइव प्रीव्यू',
+                generateText: 'वीडियो बनाएं',
+                previewText: 'प्रीव्यू',
+                statusEmpty: 'वीडियो बनाने से पहले अपनी आवाज़ अपलोड करें।',
+                statusRender: 'आपकी आवाज़ के साथ वीडियो बनाया जा रहा है...',
+                statusSuccess: '✅ वीडियो बन गया और डाउनलोड हो गया!',
+                statusError: 'पहले टेक्स्ट लिखें।',
+                statusNoVoice: 'पहले आवाज़ अपलोड करें।',
+                voicePrompt: 'अभी कोई आवाज़ अपलोड नहीं हुई है। अपनी रिकॉर्डिंग अपलोड करें और वही आवाज़ वीडियो में उपयोग होगी।',
+                effects: {
+                    neon: '🌟 नेन-ग्लो',
+                    typewriter: '⌨️ टाइपराइटर',
+                    bounce: '🎈 बाउंस',
+                    highlight: '🎬 हाइलाइट'
+                },
+                backgrounds: {
+                    'gradient-dark': 'डार्क ग्रेडिएंट',
+                    'gradient-purple': 'पर्पल वाइब्स',
+                    'gradient-sunset': 'सनसेट',
+                    'gradient-ocean': 'ओशन ब्लू',
+                    'black': 'सॉलिड ब्लैक'
+                }
+            },
+            gu: {
+                title: '✨ वायरल ટેક્સ્ટ વિડિયો જનરેટર',
+                subtitle: 'તમારી અપલોડ કરેલી અવાજ સાથે ટાઈપિંગ વિડિયો બનાવો',
+                textLabel: 'તમારો ટેક્સ્ટ',
+                previewLabel: 'લાઇવ પ્રીવ્યુ',
+                generateText: 'વિડિયો બનાવો',
+                previewText: 'પ્રીવ્યુ',
+                statusEmpty: 'વિડિયો બનાવવા પહેલા તમારી અવાજ અપલોડ કરો.',
+                statusRender: 'તમારી અવાજ સાથે વિડિયો બની રહ્યો છે...',
+                statusSuccess: '✅ વિડિયો તૈયાર અને ડાઉનલોડ થઈ ગયો!',
+                statusError: 'પહેલાં ટેક્સ્ટ લખી દો.',
+                statusNoVoice: 'પહેલાં અવાજ ફાઇલ અપલોડ કરો.',
+                voicePrompt: 'હજુ સુધી કોઈ અવાજ અપલોડ નથી. તમારી રેકોર્ડિંગ અપલોડ કરો અને તે જ અવાજ ફાઇનલ વિડિયોમાં વાપરાશે.',
+                effects: {
+                    neon: '🌟 નિઓન ગ્લો',
+                    typewriter: '⌨️ ટાઈપરાઈટર',
+                    bounce: '🎈 બાઉન્સ',
+                    highlight: '🎬 હાઇલાઇટ'
+                },
+                backgrounds: {
+                    'gradient-dark': 'ડાર્ક ગ્રેડિયન્ટ',
+                    'gradient-purple': 'પર્પલ વાઇબ્સ',
+                    'gradient-sunset': 'સનસેટ',
+                    'gradient-ocean': 'ઓશન બ્લુ',
+                    'black': 'સોલિડ બ્લેક'
+                }
+            }
+        };
+
+        const bgGradients = {
+            'gradient-dark': { colors: ['#0f172a', '#1e293b'], angle: 135 },
+            'gradient-purple': { colors: ['#2d1b69', '#6d28d9'], angle: 135 },
+            'gradient-sunset': { colors: ['#7c2d12', '#ea580c'], angle: 135 },
+            'gradient-ocean': { colors: ['#0c4a6e', '#0369a1'], angle: 135 },
+            'black': { colors: ['#000000', '#000000'], angle: 0 }
+        };
+
+        function showStatus(message, type = 'info') {
+            statusEl.textContent = message;
+            statusEl.className = `status show ${type}`;
+            clearTimeout(showStatus.timeoutId);
+            showStatus.timeoutId = setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function setupLanguages() {
+            const langs = Object.keys(translations);
+            languageSelector.innerHTML = '';
+            langs.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.className = `lang-btn ${lang === currentLanguage ? 'active' : ''}`;
+                btn.textContent = lang.toUpperCase();
+                btn.addEventListener('click', () => setLanguage(lang));
+                languageSelector.appendChild(btn);
+            });
+            setLanguage('en');
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.querySelector('label[for="textInput"]').textContent = t.textLabel;
+            document.querySelector('label[for="effectSelect"]').textContent = 'Text Effect';
+            document.querySelector('label[for="bgColorSelect"]').textContent = 'Background Style';
+            document.querySelector('label[for="voiceInput"]').textContent = 'Your Voice File';
+
+            generateBtn.textContent = t.generateText;
+            previewBtn.textContent = t.previewText;
+            voiceInfo.textContent = t.voicePrompt;
+
+            effectSelect.innerHTML = '';
+            Object.entries(t.effects).forEach(([key, label]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = label;
+                effectSelect.appendChild(option);
+            });
+
+            bgColorSelect.innerHTML = '';
+            Object.entries(t.backgrounds).forEach(([key, label]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = label;
+                bgColorSelect.appendChild(option);
+            });
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === lang.toUpperCase());
+            });
+
+            if (uploadedVoiceURL) {
+                voiceInfo.textContent = 'Uploaded voice ready: ' + (voiceInput.files[0]?.name || 'voice file');
+            }
+
+            drawPreviewFrame(0, true);
+        }
+
+        function createGradient(ctxRef, bgStyle) {
+            const config = bgGradients[bgStyle] || bgGradients['gradient-dark'];
+            const angle = (config.angle * Math.PI) / 180;
+            const x1 = CANVAS_WIDTH / 2 - Math.cos(angle) * CANVAS_WIDTH;
+            const y1 = CANVAS_HEIGHT / 2 - Math.sin(angle) * CANVAS_HEIGHT;
+            const x2 = CANVAS_WIDTH / 2 + Math.cos(angle) * CANVAS_WIDTH;
+            const y2 = CANVAS_HEIGHT / 2 + Math.sin(angle) * CANVAS_HEIGHT;
+
+            const gradient = ctxRef.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, config.colors[0]);
+            gradient.addColorStop(1, config.colors[1]);
+            return gradient;
+        }
+
+        function drawBackground(bgStyle) {
+            const gradient = createGradient(ctx, bgStyle);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            ctx.fillStyle = 'rgba(236, 72, 153, 0.08)';
+            for (let i = 0; i < 6; i++) {
+                const x = (i * 135 + 50) % CANVAS_WIDTH;
+                const y = (i * 210 + 70) % CANVAS_HEIGHT;
+                const size = 30 + i * 12;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function wrapText(text, maxWidth) {
+            const words = text.split(/\s+/);
+            const lines = [];
+            let line = '';
+
+            words.forEach(word => {
+                const candidate = line ? line + ' ' + word : word;
+                if (ctx.measureText(candidate).width > maxWidth && line) {
+                    lines.push(line);
+                    line = word;
+                } else {
+                    line = candidate;
+                }
+            });
+
+            if (line) lines.push(line);
+            return lines.length ? lines : [''];
+        }
+
+        function drawNeon(text, frameIndex) {
+            drawBackground(bgColorSelect.value);
+
+            const progress = (frameIndex % (FPS * DEFAULT_DURATION)) / (FPS * DEFAULT_DURATION);
+            const baseScale = 0.85 + Math.sin(progress * Math.PI * 2) * 0.13;
+            const centerY = CANVAS_HEIGHT / 2;
+            const lines = wrapText(text, 540);
+
+            ctx.save();
+            ctx.translate(CANVAS_WIDTH / 2, centerY);
+            ctx.scale(baseScale, baseScale);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '700 78px Arial, sans-serif';
+
+            const lineHeight = 92;
+            const startY = -((lines.length - 1) * lineHeight) / 2;
+
+            for (let i = 0; i < lines.length; i++) {
+                const y = startY + i * lineHeight;
+                for (let glow = 4; glow > 0; glow--) {
+                    ctx.fillStyle = `rgba(236, 72, 153, ${0.25 / glow})`;
+                    ctx.shadowColor = 'rgba(236, 72, 153, 0.9)';
+                    ctx.shadowBlur = glow * 16;
+                    ctx.fillText(lines[i], 0, y);
+                }
+                ctx.fillStyle = '#fdf2f8';
+                ctx.shadowColor = '#ec4899';
+                ctx.shadowBlur = 18;
+                ctx.fillText(lines[i], 0, y);
+            }
+
+            ctx.restore();
+        }
+
+        function drawTypewriter(text, frameIndex) {
+            drawBackground(bgColorSelect.value);
+
+            const durationFrames = FPS * DEFAULT_DURATION;
+            const progress = (frameIndex % durationFrames) / durationFrames;
+            const charCount = Math.floor(progress * text.length * 2.3) % (text.length + 1);
+            const lines = wrapText(text, 560);
+            const displayText = lines.map((line, idx) => {
+                const visibleChars = Math.max(0, charCount - idx * 10);
+                return line.slice(0, visibleChars);
+            }).join('\n');
+
+            ctx.font = '700 68px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#e2e8f0';
+
+            const yStart = CANVAS_HEIGHT / 2 - ((lines.length - 1) * 60) / 2;
+            const linesToDraw = displayText.split('\n');
+            linesToDraw.forEach((line, i) => {
+                ctx.fillText(line, CANVAS_WIDTH / 2, yStart + i * 70);
+            });
+
+            if (charCount < text.length) {
+                const lastLine = linesToDraw[linesToDraw.length - 1] || '';
+                const cursorX = ctx.measureText(lastLine).width / 2 + 12;
+                const cursorY = yStart + (linesToDraw.length - 1) * 70;
+                ctx.fillStyle = '#ec4899';
+                ctx.fillRect(CANVAS_WIDTH / 2 + cursorX, cursorY - 34, 6, 68);
+            }
+        }
+
+        function drawBounce(text, frameIndex) {
+            drawBackground(bgColorSelect.value);
+
+            const progress = (frameIndex % (FPS * DEFAULT_DURATION)) / (FPS * DEFAULT_DURATION);
+            const bounce = Math.abs(Math.sin(progress * Math.PI * 2));
+            const scale = 0.7 + bounce * 0.35;
+            const offsetY = bounce * 60;
+            const lines = wrapText(text, 520);
+
+            ctx.save();
+            ctx.translate(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+            ctx.scale(scale, scale);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '700 74px Arial, sans-serif';
+
+            const gradient = ctx.createLinearGradient(-200, -50, 200, 50);
+            gradient.addColorStop(0, '#ec4899');
+            gradient.addColorStop(0.5, '#f97316');
+            gradient.addColorStop(1, '#ec4899');
+            ctx.fillStyle = gradient;
+
+            const startY = -((lines.length - 1) * 80) / 2 + offsetY;
+            lines.forEach((line, i) => {
+                ctx.fillText(line, 0, startY + i * 80);
+            });
+
+            ctx.restore();
+        }
+
+        function drawHighlight(text, frameIndex) {
+            drawBackground(bgColorSelect.value);
+
+            const progress = (frameIndex % (FPS * DEFAULT_DURATION)) / (FPS * DEFAULT_DURATION);
+            const highlightProgress = Math.abs(Math.sin(progress * Math.PI * 2));
+            const lines = wrapText(text, 520);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '700 74px Arial, sans-serif';
+
+            const startY = CANVAS_HEIGHT / 2 - ((lines.length - 1) * 80) / 2;
+            lines.forEach((line, i) => {
+                const y = startY + i * 80;
+                const textWidth = ctx.measureText(line).width;
+                ctx.fillStyle = `rgba(236, 72, 153, ${0.2 + highlightProgress * 0.3})`;
+                ctx.shadowColor = 'rgba(236, 72, 153, 0.5)';
+                ctx.shadowBlur = 18;
+                ctx.fillRect(CANVAS_WIDTH / 2 - textWidth / 2 - 24, y - 42, textWidth + 48, 82);
+                ctx.fillStyle = '#fbbf24';
+                ctx.shadowColor = '#fbbf24';
+                ctx.shadowBlur = 8;
+                ctx.fillText(line, CANVAS_WIDTH / 2, y);
+            });
+        }
+
+        function drawPreviewFrame(frameIndex, force) {
+            const text = textInput.value.trim() || 'Type your message...';
+            const effect = effectSelect.value;
+
+            switch (effect) {
+                case 'neon': drawNeon(text, frameIndex); break;
+                case 'typewriter': drawTypewriter(text, frameIndex); break;
+                case 'bounce': drawBounce(text, frameIndex); break;
+                case 'highlight': drawHighlight(text, frameIndex); break;
+                default: drawNeon(text, frameIndex);
+            }
+        }
+
+        function startPreviewLoop() {
+            clearInterval(currentPreviewTimer);
+            let frame = 0;
+            currentPreviewTimer = setInterval(() => {
+                drawPreviewFrame(frame++);
+            }, 1000 / FPS);
+        }
+
+        function handleVoiceUpload() {
+            const file = voiceInput.files[0];
+            if (!file) {
+                uploadedVoiceURL = null;
+                uploadedVoiceDuration = DEFAULT_DURATION;
+                voiceInfo.textContent = translations[currentLanguage].voicePrompt;
+                return;
+            }
+
+            if (uploadedVoiceURL) {
+                URL.revokeObjectURL(uploadedVoiceURL);
+            }
+
+            uploadedVoiceURL = URL.createObjectURL(file);
+            const audio = new Audio(uploadedVoiceURL);
+            audio.addEventListener('loadedmetadata', () => {
+                uploadedVoiceDuration = Math.max(3, Math.min(audio.duration || DEFAULT_DURATION, 30));
+                voiceInfo.textContent = 'Uploaded voice ready: ' + file.name + ' (' + uploadedVoiceDuration.toFixed(1) + 's)';
+            }, { once: true });
+            voiceInfo.textContent = 'Loading voice file...';
+        }
+
+        async function generateVideo() {
+            const text = textInput.value.trim();
+            if (!text) {
+                showStatus(translations[currentLanguage].statusError, 'error');
+                return;
+            }
+
+            if (!voiceInput.files[0]) {
+                showStatus(translations[currentLanguage].statusNoVoice, 'error');
+                return;
+            }
+
+            const audioFile = voiceInput.files[0];
+            const audioUrl = URL.createObjectURL(audioFile);
+            const audio = new Audio(audioUrl);
+            audio.preload = 'auto';
+
+            await new Promise((resolve) => {
+                audio.onloadedmetadata = resolve;
+            });
+
+            const videoDuration = Math.max(3, Math.min(audio.duration || DEFAULT_DURATION, 30));
+            const totalFrames = Math.ceil(videoDuration * FPS);
+            const canvasStream = canvas.captureStream(FPS);
+
+            let audioStream;
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaElementSource(audio);
+            const destination = audioContext.createMediaStreamDestination();
+            source.connect(destination);
+            source.connect(audioContext.destination);
+
+            audioStream = destination.stream;
+            const mixedStream = new MediaStream([
+                ...canvasStream.getVideoTracks(),
+                ...audioStream.getAudioTracks()
+            ]);
+
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9'
+                : 'video/webm';
+
+            const recorder = new MediaRecorder(mixedStream, { mimeType });
+            const chunks = [];
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'viral-text-video-' + Date.now() + '.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+                showStatus(translations[currentLanguage].statusSuccess, 'success');
+                generateBtn.disabled = false;
+                audio.pause();
+                audio.currentTime = 0;
+                audioContext.close();
+            };
+
+            recorder.start();
+            generateBtn.disabled = true;
+            showStatus(translations[currentLanguage].statusRender, 'info');
+
+            const start = performance.now();
+            const animateFrame = (timestamp) => {
+                const elapsed = (timestamp - start) / 1000;
+                const frameIndex = Math.min(totalFrames - 1, Math.floor(elapsed * FPS));
+                drawPreviewFrame(frameIndex, true);
+
+                if (elapsed < videoDuration) {
+                    requestAnimationFrame(animateFrame);
+                } else {
+                    recorder.stop();
+                }
+            };
+
+            audio.play();
+            requestAnimationFrame(animateFrame);
+        }
+
+        textInput.addEventListener('input', () => drawPreviewFrame(0, true));
+        effectSelect.addEventListener('change', () => drawPreviewFrame(0, true));
+        bgColorSelect.addEventListener('change', () => drawPreviewFrame(0, true));
+        generateBtn.addEventListener('click', generateVideo);
+        previewBtn.addEventListener('click', () => {
+            if (!textInput.value.trim()) {
+                showStatus(translations[currentLanguage].statusError, 'error');
+                return;
+            }
+            startPreviewLoop();
+            showStatus('Preview playing...', 'info');
+        });
+        voiceInput.addEventListener('change', handleVoiceUpload);
+
+        setupLanguages();
+        drawPreviewFrame(0, true);
+        startPreviewLoop();
+    </script>
+</body>
+</html>
