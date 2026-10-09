@@ -1,0 +1,310 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+
+DEFAULT_VOICE_FILE = BASE_DIR / "Standard recording 32_20261008192509.mp3"
+AUDIO_OUTPUT_DIR = DATA_DIR / "generated"
+AUDIO_OUTPUT_DIR.mkdir(exist_ok=True)
+
+HISTORY_DB = DATA_DIR / "tts_history.db"
+
+app = FastAPI(title="Free Local TTS + Voice Clone", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class GenerateRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    language: str = "auto"
+    voice_id: str = "default-reference"
+    voice_file: str | None = None
+    use_reference_voice: bool = True
+    voice_name: str | None = None
+    speed: float = 1.0
+
+
+class GenerateResponse(BaseModel):
+    status: str
+    audio_path: str | None = None
+    download_name: str | None = None
+    text: str | None = None
+    language: str | None = None
+    message: str | None = None
+
+
+def _db_connect() -> sqlite3.Connection:
+    conn = sqlite3.connect(HISTORY_DB)
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            text TEXT NOT NULL,
+            language TEXT NOT NULL,
+            voice_id TEXT NOT NULL,
+            audio_name TEXT NOT NULL,
+            audio_path TEXT NOT NULL,
+            status TEXT NOT NULL,
+            voice_reference TEXT NOT NULL
+        )
+        """
+    )
+    conn.commit()
+    return conn
+
+
+def _normalize_language(raw: str) -> str:
+    lang = (raw or "auto").strip().lower()
+    if lang in {"auto", "automatic", ""}:
+        return "auto"
+    if lang.startswith("hi"):
+        return "hi"
+    if lang.startswith("gu"):
+        return "gu"
+    if lang.startswith("en"):
+        return "en"
+    return lang
+
+
+def _guess_language_from_text(text: str) -> str:
+    maybe = text.strip()
+    if not maybe:
+        return "en"
+
+    # Very simple heuristic; actual model language can be tuned by the client.
+    # Gujarati and Hindi have strong script markers.
+    if any(ch in maybe for ch in "આઈઈઉઉઋ૯૧પહિમણ"):
+        return "gu"
+    if any(ch in maybe for ch in "अआइईउऋएऐओऔकखगघचछजझटठडढतथदधनपफबभमयरलवशषसहंः"):
+        return "hi"
+    return "en"
+
+
+def _safe_voice_file(path: str | None) -> str:
+    # Prefer the repository voice sample if no custom file is provided.
+    if path and os.path.exists(path):
+        return path
+    if DEFAULT_VOICE_FILE.exists():
+        return str(DEFAULT_VOICE_FILE)
+    raise HTTPException(status_code=400, detail="No valid voice reference file found.")
+
+
+def _audio_download_name(label: str) -> str:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    digest = hashlib.sha1(label.encode("utf-8")).hexdigest()[:8]
+    return f"tts_{digest}_{stamp}.wav"
+
+
+def _persist_history(text: str, language: str, voice_id: str, audio_name: str, audio_path: str, status: str, voice_reference: str) -> None:
+    conn = _db_connect()
+    conn.execute(
+        "INSERT INTO history (created_at, text, language, voice_id, audio_name, audio_path, status, voice_reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            text,
+            language,
+            voice_id,
+            audio_name,
+            audio_path,
+            status,
+            voice_reference,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+class TTSService:
+    def __init__(self) -> None:
+        self.tts = None
+        self.model_loaded = False
+        self.model_error = None
+        self.model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
+        self._lazy_init()
+
+    def _lazy_init(self) -> None:
+        try:
+            # Import here so the app can start even if the dependency is not fully installed.
+            from TTS.api import TTS
+
+            self.tts = TTS(model_name=self.model_name, progress_bar=False, gpu=False)
+            self.model_loaded = True
+            self.model_error = None
+        except Exception as exc:  # pragma: no cover - environment dependent
+            self.model_loaded = False
+            self.model_error = str(exc)
+
+    def generate(self, text: str, language: str, voice_file: str, output_path: str) -> str:
+        if not self.model_loaded or self.tts is None:
+            raise RuntimeError(
+                "XTTS-v2 is not available in this environment. Install requirements and download the model first. "
+                f"Details: {self.model_error or 'unknown error'}"
+            )
+
+        normalized_lang = language if language not in {"auto", ""} else "en"
+        # The Coqui API accepts a language code such as en, hi, or gu if the model supports it.
+        self.tts.tts_to_file(
+            text=text,
+            speaker_wav=voice_file,
+            language=normalized_lang,
+            file_path=output_path,
+            split_sentences=True,
+            speed=1.0,
+        )
+        return output_path
+
+
+SERVICE = TTSService()
+
+
+@app.get("/health")
+def health() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "default_voice_file": str(DEFAULT_VOICE_FILE),
+        "voice_file_exists": DEFAULT_VOICE_FILE.exists(),
+        "xtts_loaded": SERVICE.model_loaded,
+        "xtts_error": SERVICE.model_error,
+    }
+
+
+@app.get("/api/voice/default")
+def get_default_voice() -> dict[str, Any]:
+    return {
+        "voice_id": "default-reference",
+        "voice_name": "Standard recording 32_20261008192509",
+        "voice_file": str(DEFAULT_VOICE_FILE),
+        "exists": DEFAULT_VOICE_FILE.exists(),
+        "language_hint": "auto",
+        "note": "This is the repository reference voice used for local voice cloning when available.",
+    }
+
+
+@app.get("/api/tts/support")
+def get_tts_support() -> dict[str, Any]:
+    return {
+        "engine": "Coqui XTTS-v2 (local, free/open-source)",
+        "local": True,
+        "voice_cloning": True,
+        "voice_clone_requires_reference": True,
+        "languages": {
+            "en": "supported by common XTTS models",
+            "hi": "depends on the downloaded model and runtime support",
+            "gu": "depends on model language coverage; verify before relying on it",
+            "auto": "heuristic detection is used when possible",
+        },
+        "notes": "The exact language coverage depends on the model file downloaded locally. The app does not claim Hindi/Gujarati support without the model supporting it.",
+        "xtts_loaded": SERVICE.model_loaded,
+        "xtts_error": SERVICE.model_error,
+    }
+
+
+@app.get("/api/tts/history")
+def list_history() -> list[dict[str, Any]]:
+    conn = _db_connect()
+    rows = conn.execute(
+        "SELECT * FROM history ORDER BY id DESC LIMIT 20"
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+@app.get("/tts")
+def serve_tts_ui() -> FileResponse:
+    return FileResponse(STATIC_DIR / "tts.html")
+
+
+@app.get("/api/tts/download/{audio_name}")
+def get_generated_audio(audio_name: str) -> FileResponse:
+    file_path = AUDIO_OUTPUT_DIR / audio_name
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Audio not found.")
+    return FileResponse(path=file_path, media_type="audio/wav", filename=audio_name)
+
+
+@app.post("/api/tts/generate", response_model=GenerateResponse)
+def generate_tts(payload: GenerateRequest) -> GenerateResponse:
+    raw_text = payload.text.strip()
+    if not raw_text:
+        raise HTTPException(status_code=400, detail="Text is required.")
+
+    language = _normalize_language(payload.language)
+    if language == "auto":
+        language = _guess_language_from_text(raw_text)
+
+    voice_file = _safe_voice_file(payload.voice_file)
+    output_name = _audio_download_name(raw_text)
+    output_path = AUDIO_OUTPUT_DIR / output_name
+
+    # Always prefer WAV for a stable intermediate, and expose MP3 when conversion is available.
+    if output_path.exists():
+        output_path.unlink()
+
+    try:
+        generated = SERVICE.generate(raw_text, language, voice_file, str(output_path.with_suffix(".wav")))
+        mp3_name = output_path.with_suffix(".wav").name.replace(".wav", ".mp3")
+        # Convert WAV to MP3 if pydub is available.
+        try:
+            from pydub import AudioSegment
+
+            audio = AudioSegment.from_wav(generated)
+            audio.export(AUDIO_OUTPUT_DIR / mp3_name, format="mp3")
+        except Exception:
+            mp3_name = None
+
+        _persist_history(
+            text=raw_text,
+            language=language,
+            voice_id=payload.voice_id,
+            audio_name=output_path.with_suffix(".wav").name,
+            audio_path=str(output_path.with_suffix(".wav")),
+            status="ok",
+            voice_reference=voice_file,
+        )
+
+        return GenerateResponse(
+            status="success",
+            audio_path=str(output_path.with_suffix(".wav")),
+            download_name=output_path.with_suffix(".wav").name,
+            text=raw_text,
+            language=language,
+            message="Speech generated successfully with the selected reference voice.",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+if not STATIC_DIR.exists():
+    STATIC_DIR.mkdir(exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
