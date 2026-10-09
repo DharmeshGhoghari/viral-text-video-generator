@@ -45,6 +45,23 @@
             margin-bottom: 22px;
         }
 
+        .nav-link {
+            display: inline-block;
+            margin: 0 auto 18px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            box-shadow: 0 10px 28px rgba(236, 72, 153, 0.25);
+        }
+
+        .nav-link:hover {
+            opacity: 0.96;
+        }
+
         .header h1 {
             margin: 0 0 8px;
             font-size: clamp(24px, 5vw, 36px);
@@ -259,6 +276,10 @@
 </head>
 <body>
     <div class="app">
+        <div style="display:flex; justify-content:center; margin-bottom: 18px;">
+            <a href="tts.html" class="nav-link">🎤 Text-to-Speech</a>
+        </div>
+
         <header class="header">
             <h1 id="title">✨ Viral Text Video Generator</h1>
             <p id="subtitle">Create a typing video using your uploaded voice</p>
@@ -384,7 +405,7 @@
                 statusSuccess: '✅ वीडियो बन गया और डाउनलोड हो गया!',
                 statusError: 'पहले टेक्स्ट लिखें।',
                 statusNoVoice: 'पहले आवाज़ अपलोड करें।',
-                voicePrompt: 'अभी कोई आवाज़ अपलोड नहीं हुई है। अपनी रिकॉर्डिंग अपलोड करें और वही आवाज़ वीडियो में उपयोग होगी।',
+                voicePrompt: 'अभी कोई आवाज़ अपलोड नहीं हुई है। अपनी रिकॉर्डिंग अपलोड करें और यह अंतिम वीडियो में उपयोग होगी।',
                 effects: {
                     neon: '🌟 नेन-ग्लो',
                     typewriter: '⌨️ टाइपराइटर',
@@ -407,11 +428,11 @@
                 generateText: 'વિડિયો બનાવો',
                 previewText: 'પ્રીવ્યુ',
                 statusEmpty: 'વિડિયો બનાવવા પહેલા તમારી અવાજ અપલોડ કરો.',
-                statusRender: 'તમારી અવાજ સાથે విధિયો બનાવી રહ્યો છે...',
+                statusRender: 'તમારી અવાજ સાથે વિડિયો બનાવી રહ્યો છે...',
                 statusSuccess: '✅ વિડિયો તૈયાર અને ડાઉનલોડ થઈ ગયો!',
                 statusError: 'પહેલાં ટેક્સ્ટ લખી દો.',
                 statusNoVoice: 'પહેલાં અવાજ ફાઇલ અપલોડ કરો.',
-                voicePrompt: 'હજુ સુધી કોઈ અવાજ અપલોડ નથી. તમારી રેકોર્ડિંગ અપલોડ કરો અને તે જ અવાજ ફાઇનલ વિડિયોમાં વાપરાશે.',
+                voicePrompt: 'હજી સુધી કોઈ અવાજ અપલોડ નથી. તમારી રેકોર્ડિંગ અપલોડ કરો અને તે અંતિમ વિડિયોમાં વાપરાશે.',
                 effects: {
                     neon: '🌟 નિઓન ગ્લો',
                     typewriter: '⌨️ ટાઈપરાઈટર',
